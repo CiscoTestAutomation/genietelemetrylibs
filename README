@@ -1,0 +1,39 @@
+GenieMonitor Libraries
+----------------------
+
+Geniemonitor Libraries file hierarchy
+-------------------------------------
+plugins/
+|-- __init__.py
+|-- crashdumps
+|   |-- __init__.py
+|   |-- iosxe
+|   |   |-- __init__.py
+|   |   `-- plugin.py
+|   |-- iosxr
+|   |   |-- __init__.py
+|   |   `-- plugin.py
+|   |-- nxos
+|   |   |-- __init__.py
+|   |   `-- plugin.py
+|   `-- plugin.pyn[]
+|-- libs
+|   |-- __init__.py
+|   |-- iosxe
+|   |   |-- __init__.py
+|   |   `-- utils.py
+|   |-- iosxr
+|   |   |-- __init__.py
+|   |   `-- utils.py
+|   `-- nxos
+|       |-- __init__.py
+|       `-- utils.py
+
+
+Plugin Template:
+----------------
+cd $VIRTUAL_ENV/projects/geniemonitor_libs/template
+
+Plugin Example:
+---------------
+cd $VIRTUAL_ENV/projects/geniemonitor_libs/plugins/crashdumps

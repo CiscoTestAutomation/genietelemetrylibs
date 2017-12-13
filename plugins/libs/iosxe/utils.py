@@ -96,7 +96,7 @@ def upload_to_server(device, core_list, **kwargs):
     for item in core_list:
         cmd = get_upload_cmd(server = server, port = port, dest = destination, 
                              protocol = protocol, core = item['core'], 
-                             location = 'crashinfo')
+                             location = item['location'])
         message = "Core dump upload attempt: {}".format(cmd)
         try:
             result = device.execute(cmd, timeout = timeout, reply=dialog)

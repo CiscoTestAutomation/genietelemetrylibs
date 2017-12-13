@@ -66,7 +66,6 @@ def check_cores(device, core_list):
 
 def upload_to_server(device, core_list, **kwargs):
 
-    core_list = core_list[:2]
     # Init
     status= OK
 
@@ -122,7 +121,7 @@ def get_upload_cmd(server, port, dest, protocol, core, location):
     if port:
         server = '{server}:{port}'.format(server = server, port = port)
 
-    cmd = 'copy {location}:{core} {protocol}://{server}/{dest}/{core}'
+    cmd = 'copy {location}/{core} {protocol}://{server}/{dest}/{core}'
 
     return cmd.format(location=location, core=core, protocol=protocol,
                       server=server, dest=dest)

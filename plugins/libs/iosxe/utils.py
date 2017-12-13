@@ -9,9 +9,8 @@ from ats.log.utils import banner
 # GenieMonitor
 from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
-# Unicon
-from unicon.eal.dialogs import Statement, Dialog
-from unicon.eal.utils import expect_log
+# ConnectionUnifier
+from connectionunifier import unifier
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -67,6 +66,7 @@ def check_cores(device, core_list):
 
 def upload_to_server(device, core_list, **kwargs):
 
+    core_list = core_list[:2]
     # Init
     status= OK
 
@@ -85,23 +85,19 @@ def upload_to_server(device, core_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Create unicon dialog (for ftp)
-    dialog = Dialog([
-        Statement(pattern=r'Address or name of remote host.*',
-                  action='sendline()',
-                  loop_continue=True,
-                  continue_timer=False),
-        Statement(pattern=r'Destination filename.*',
-                  action='sendline()',
-                  loop_continue=True,
-                  continue_timer=False),
-        ])
+    # Define the pattern to construct the connection dialog
+    pattern =\
+        {"Address or name of remote host.*": "sendline()",
+         "Destination filename.*": "sendline()"}
+
+    # Construct the dialog as per the device connection
+    dialog = unifier.handle_dialog(device, pattern)
 
     # Upload each core found
     for item in core_list:
         cmd = get_upload_cmd(server = server, port = port, dest = destination, 
                              protocol = protocol, core = item['core'], 
-                             location = item['location'])
+                             location = 'crashinfo')
         message = "Core dump upload attempt: {}".format(cmd)
         try:
             result = device.execute(cmd, timeout = timeout, reply=dialog)
@@ -126,7 +122,7 @@ def get_upload_cmd(server, port, dest, protocol, core, location):
     if port:
         server = '{server}:{port}'.format(server = server, port = port)
 
-    cmd = 'copy {location}/{core} {protocol}://{server}/{dest}/{core}'
+    cmd = 'copy {location}:{core} {protocol}://{server}/{dest}/{core}'
 
     return cmd.format(location=location, core=core, protocol=protocol,
                       server=server, dest=dest)
@@ -134,13 +130,12 @@ def get_upload_cmd(server, port, dest, protocol, core, location):
 
 def clear_cores(device, core_list):
 
-    # Create dialog for response
-    dialog = Dialog([
-        Statement(pattern=r'Delete.*',
-                  action='sendline()',
-                  loop_continue=True,
-                  continue_timer=False),
-        ])
+    # define the pattern to construct the connection dialog
+    pattern =\
+        {"Delete.*": "sendline()"}
+
+    # Construct the dialog as per the device connection
+    dialog = unifier.handle_dialog(device, pattern)
 
     # Delete cores from the device
     for item in core_list:

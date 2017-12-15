@@ -98,7 +98,9 @@ class Plugin(BasePlugin):
 
         # Execute command to check for cores
         status += lookup.libs.utils.check_cores(device, self.core_list,
-            self.crashreport_list, timeout)
+                                                crashreport_list=\
+                                                self.crashreport_list,
+                                                timeout=timeout)
 
         # User requested upload cores to server
         if self.args.upload and status == CRITICAL:

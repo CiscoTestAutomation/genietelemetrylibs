@@ -9,22 +9,24 @@ from ats.log.utils import banner
 # GenieMonitor
 from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
-# ConnectionUnifier
-from connectionunifier import unifier
+# Unicon
+from unicon.eal.dialogs import Statement, Dialog
+from unicon.eal.utils import expect_log
 
 # module logger
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list):
+def check_cores(device, core_list, **kwargs):
 
     # Init
     status = OK
+    timeout = kwargs['timeout']
     
     # Execute command to check for cores
     for location in ['disk0:', 'disk0:core', 'harddisk:']:
         try:
-            output = device.execute('dir {}'.format(location))
+            output = device.execute('dir {}'.format(location), timeout=timeout)
         except Exception as e:
             # Handle exception
             logger.warning(e)
@@ -85,14 +87,21 @@ def upload_to_server(device, core_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Define the pattern to construct the connection dialog
-    pattern =\
-        {"Destination username:.*": "sendline({username})".format(username=username),
-         "Destination password:.*": "sendline({password})".format(password=password),
-         "Destination filename.*": "sendline()"}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Create unicon dialog (for ftp)
+    dialog = Dialog([
+        Statement(pattern=r'Destination username:.*',
+                  action='sendline({username})'.format(username=username),
+                  loop_continue=True,
+                  continue_timer=False),
+        Statement(pattern=r'Destination password:.*',
+                  action='sendline({password})'.format(password=password),
+                  loop_continue=True,
+                  continue_timer=False),
+        Statement(pattern=r'Destination filename.*',
+                  action='sendline()',
+                  loop_continue=True,
+                  continue_timer=False),
+        ])
 
     # Upload each core found
     for item in core_list:
@@ -129,14 +138,15 @@ def get_upload_cmd(server, port, dest, protocol, core, location):
                       server=server, dest=dest)
 
 
-def clear_cores(device, core_list):
+def clear_cores(device, core_list, **kwargs):
 
-    # Define the pattern to construct the connection dialog
-    pattern =\
-        {"Delete.*": "sendline()"}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Create dialog for response
+    dialog = Dialog([
+        Statement(pattern=r'Delete.*',
+                  action='sendline()',
+                  loop_continue=True,
+                  continue_timer=False),
+        ])
 
     # Delete cores from the device
     for item in core_list:

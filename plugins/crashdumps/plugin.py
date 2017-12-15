@@ -39,7 +39,7 @@ class Plugin(BasePlugin):
         # --------
         parser.add_argument('-protocol',
                             action="store",
-                            default='tftp',
+                            default=None,
                             help = 'Specify upload protocol\ndefault to TFTP')
         # server
         # ------
@@ -92,9 +92,13 @@ class Plugin(BasePlugin):
 
         # List to hold cores
         self.core_list = []
+        self.crashreport_list = []
+
+        timeout = self.args.timeout
 
         # Execute command to check for cores
-        status += lookup.libs.utils.check_cores(device, self.core_list)
+        status += lookup.libs.utils.check_cores(device, self.core_list,
+            self.crashreport_list, timeout)
 
         # User requested upload cores to server
         if self.args.upload and status == CRITICAL:
@@ -105,11 +109,41 @@ class Plugin(BasePlugin):
                       'password': self.args.password, 
                       'destination': self.args.destination,
                       'timeout': self.args.timeout}
-            status += lookup.libs.utils.upload_to_server(device, self.core_list, **kwargs)
+
+            # Will make sure that manadtory keys exist for uploading to server
+            # [protocol, server, destination, username, password]
+            if not kwargs['protocol']:
+                valid_protocols_list = ['tftp', 'ftp', 'scp']
+                if hasattr(device.testbed, 'servers'):
+                    for item in device.testbed.servers.keys():
+                        if item in valid_protocols_list:
+                            kwargs['protocol'] = item
+
+                            if not kwargs['server']:
+                                kwargs['server'] = \
+                                    device.testbed.servers[item].address
+
+                            if not kwargs['destination'] or kwargs['destination'] == '/':
+                                kwargs['destination'] = \
+                                    device.testbed.servers[item].path
+
+                            if not kwargs['username']:
+                                kwargs['username'] = \
+                                    device.testbed.servers[item].username
+
+                            if not kwargs['password']:
+                                kwargs['password'] = \
+                                    device.testbed.servers[item].password
+
+                        break
+
+            status += lookup.libs.utils.upload_to_server(device,
+                self.core_list, self.crashreport_list, **kwargs)
 
         # User requested clean up of cores
         if self.args.clean_up and status == CRITICAL:
-            status += lookup.libs.utils.clear_cores(device, self.core_list)
+            status += lookup.libs.utils.clear_cores(device, self.core_list,
+                self.crashreport_list)
 
         # Final status
         return status

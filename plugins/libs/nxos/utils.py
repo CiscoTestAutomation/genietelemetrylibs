@@ -13,14 +13,14 @@ from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 # Parsergen
 from parsergen import oper_fill_tabular
 
-# ConnectionUnifier
-from connectionunifier import unifier
+# Unicon
+from unicon.eal.dialogs import Statement, Dialog
 
 # module logger
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list):
+def check_cores(device, core_list, **kwargs):
 
     # Init
     status = OK
@@ -79,13 +79,17 @@ def upload_to_server(device, core_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Define the pattern to construct the connection dialog
-    pattern =\
-        {"Enter username:": "sendline({})".format(username),
-         "Password:": "sendline({})".format(password)}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Create unicon dialog (for ftp)
+    dialog = Dialog([
+        Statement(pattern=r'Enter username:',
+                  action='sendline({})'.format(username),
+                  loop_continue=True,
+                  continue_timer=False),
+        Statement(pattern=r'Password:',
+                  action='sendline({})'.format(password),
+                  loop_continue=True,
+                  continue_timer=False),
+        ])
 
     # Upload each core found
     for core in core_list:
@@ -134,7 +138,7 @@ def get_upload_cmd(module, pid, instance, server, port, dest, date, process, pro
                       server = server, path = path)
 
 
-def clear_cores(device, core_list):
+def clear_cores(device, core_list, **kwargs):
 
     # Execute command to delete cores
     try:

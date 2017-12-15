@@ -17,15 +17,16 @@ from unicon.eal.utils import expect_log
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list):
+def check_cores(device, core_list, **kwargs):
 
     # Init
     status = OK
+    timeout = kwargs['timeout']
     
     # Execute command to check for cores
     for location in ['disk0:', 'disk0:core', 'harddisk:']:
         try:
-            output = device.execute('dir {}'.format(location))
+            output = device.execute('dir {}'.format(location), timeout=timeout)
         except Exception as e:
             # Handle exception
             logger.warning(e)
@@ -137,7 +138,7 @@ def get_upload_cmd(server, port, dest, protocol, core, location):
                       server=server, dest=dest)
 
 
-def clear_cores(device, core_list):
+def clear_cores(device, core_list, **kwargs):
 
     # Create dialog for response
     dialog = Dialog([

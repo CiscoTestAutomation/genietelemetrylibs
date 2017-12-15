@@ -9,8 +9,9 @@ from ats.log.utils import banner
 # GenieMonitor
 from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
-# ConnectionUnifier
-from connectionunifier import unifier
+# Unicon
+from unicon.eal.dialogs import Statement, Dialog
+from unicon.eal.utils import expect_log
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -20,6 +21,21 @@ def check_cores(device, core_list, crashreport_list, timeout):
 
     # Init
     status = OK
+
+    # Construct the core pattern to be parsed later
+    # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
+    core_pattern = re.compile(r'(?P<number>(\d+)) '
+        '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
+        '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
+        '+(?P<time>(\S+)) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
+
+    # Construct the crashreport pattern to be parsed later
+    # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC
+    crashinfo_pattern = re.compile(r'(?P<number>(\d+)) '
+        '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
+        '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
+        '+(?P<time>(\S+)) +(?P<timezone>(\S+)) '
+        '+(?P<core>(crashinfo.*))$', re.IGNORECASE)
 
     # Execute command to check for cores and crashinfo reports
     for location in ['flash:/core', 'bootflash:/core', 'harddisk:/core', 'crashinfo:']:
@@ -48,12 +64,6 @@ def check_cores(device, core_list, crashreport_list, timeout):
         for line in output.splitlines():
             line = line.strip()
 
-            # Parse through output to collect core information (if any)
-            # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
-            core_pattern = re.compile(r'(?P<number>(\d+)) '
-                '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
-                '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
-                '+(?P<time>(\S+)) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
             m = core_pattern.match(line)
             if m:
                 core = m.groupdict()['core']
@@ -65,13 +75,6 @@ def check_cores(device, core_list, crashreport_list, timeout):
                 core_list.append(core_info)
                 continue
 
-            # Parse through output to collect crashinfo reports (if any)
-            # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC
-            crashinfo_pattern = re.compile(r'(?P<number>(\d+)) '
-                '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
-                '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
-                '+(?P<time>(\S+)) +(?P<timezone>(\S+)) '
-                '+(?P<core>(crashinfo.*))$', re.IGNORECASE)
             m = crashinfo_pattern.match(line)
             if m:
                 crashreport = m.groupdict()['core']
@@ -116,13 +119,17 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Define the pattern to construct the connection dialog
-    pattern =\
-        {"Address or name of remote host.*": "sendline()",
-         "Destination filename.*": "sendline()"}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Create unicon dialog (for ftp)
+    dialog = Dialog([
+        Statement(pattern=r'Address or name of remote host.*',
+                  action='sendline()',
+                  loop_continue=True,
+                  continue_timer=False),
+        Statement(pattern=r'Destination filename.*',
+                  action='sendline()',
+                  loop_continue=True,
+                  continue_timer=False),
+        ])
 
     # preparing the full list to iterate over
     full_list = core_list + crashreport_list
@@ -170,12 +177,13 @@ def get_upload_cmd(server, port, dest, protocol, core, location):
 
 def clear_cores(device, core_list, crashreport_list):
 
-    # define the pattern to construct the connection dialog
-    pattern =\
-        {"Delete.*": "sendline()"}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Create dialog for response
+    dialog = Dialog([
+        Statement(pattern=r'Delete.*',
+                  action='sendline()',
+                  loop_continue=True,
+                  continue_timer=False),
+        ])
 
     # preparing the full list to iterate over
     full_list = core_list + crashreport_list

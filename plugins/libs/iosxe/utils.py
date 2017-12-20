@@ -9,9 +9,18 @@ from ats.log.utils import banner
 # GenieMonitor
 from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
+# abstract
+from abstract import Lookup
+
+# TFTPUtils
+import tftp_utils
+
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
 from unicon.eal.utils import expect_log
+
+# ssh
+from ..ssh import Ssh
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -119,60 +128,52 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Create unicon dialog (for ftp)
-    dialog = Dialog([
-        Statement(pattern=r'Address or name of remote host.*',
-                  action='sendline()',
-                  loop_continue=True,
-                  continue_timer=False),
-        Statement(pattern=r'Destination filename.*',
-                  action='sendline()',
-                  loop_continue=True,
-                  continue_timer=False),
-        ])
-
     # preparing the full list to iterate over
     full_list = core_list + crashreport_list
 
-    # Upload each core found
+    # Got a tftp, set it up
+    # Get the information needed
+    scp = Ssh(ip=server)
+    scp.setup_scp()
+
+    # Get the corresponding tftputils implementation
+    tftpcls = Lookup.from_device(device).tftp_utils.tftp.tftp.TFTPUtils(
+        scp, kwargs['destination'])
+
+    if port:
+        server = '{server}:{port}'.format(server=server, port=port)
+
+    # Upload each core/crashinfo report found
     for item in full_list:
-        cmd = get_upload_cmd(server = server, port = port, dest = destination, 
-                             protocol = protocol, core = item['core'], 
-                             location = item['location'])
 
         if 'crashinfo' in item['core']:
             file_type = 'Crashreport'
         else:
             file_type = 'Core'
 
-        message = "{} upload attempt: {}".format(file_type, cmd)
+        message = "{} upload attempt from {} to {} via server {}".format(
+            file_type, item['location'], destination, server)
+
         try:
-            result = device.execute(cmd, timeout = timeout, reply=dialog)
-            if 'operation failed' in result or 'Error' in result:
-                meta_info = "{} upload operation failed: {}".format(file_type, message)
+            tftpcls.save_core(device, item['location'], item['core'],
+                                       server, destination, port,
+                                       timeout=timeout)
+        except Exception as e:
+            if 'Tftp operation failed' in e:
+                meta_info = "{} upload operation failed: {}".format(file_type,
+                    message)
                 logger.error(banner(meta_info))
                 status += ERRORED(meta_info)
             else:
-                meta_info = "{} upload operation passed: {}".format(file_type, message)
-                logger.info(banner(meta_info))
-                status += OK(meta_info)
-        except Exception as e:
-            # Handle exception
-            logger.warning(e)
-            status += ERRORED("Failed: {}".format(message))
+                # Handle exception
+                logger.warning(e)
+                status += ERRORED("Failed: {}".format(message))
+
+        meta_info = "{} upload operation passed: {}".format(file_type, message)
+        logger.info(banner(meta_info))
+        status += OK(meta_info)
 
     return status
-
-
-def get_upload_cmd(server, port, dest, protocol, core, location):
-    
-    if port:
-        server = '{server}:{port}'.format(server = server, port = port)
-
-    cmd = 'copy {location}/{core} {protocol}://{server}/{dest}/{core}'
-
-    return cmd.format(location=location, core=core, protocol=protocol,
-                      server=server, dest=dest)
 
 
 def clear_cores(device, core_list, crashreport_list):

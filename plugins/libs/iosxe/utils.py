@@ -155,9 +155,8 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             file_type, item['location'], destination, server)
 
         try:
-            tftpcls.save_core(device, item['location'], item['core'],
-                                       server, destination, port,
-                                       timeout=timeout)
+            tftpcls.save_core(device, item['location'], item['core'], server,
+                destination, port, timeout=timeout)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "{} upload operation failed: {}".format(file_type,
@@ -194,17 +193,17 @@ def clear_cores(device, core_list, crashreport_list):
         try:
             # Execute delete command for this core
             cmd = 'delete {location}/{core}'.format(
-                    core=item['core'],location=item['location'])
+                core=item['core'],location=item['location'])
             output = device.execute(cmd, timeout=300, reply=dialog)
             # Log to user
             meta_info = 'Successfully deleted {location}/{core}'.format(
-                        core=item['core'],location=item['location'])
+                core=item['core'],location=item['location'])
             logger.info(banner(meta_info))
             return OK(meta_info)
         except Exception as e:
             # Handle exception
             logger.warning(e)
             meta_info = 'Unable to delete {location}/{core}'.format(
-                        core=item['core'],location=item['location'])
+                core=item['core'],location=item['location'])
             logger.error(banner(meta_info))
             return ERRORED(meta_info)

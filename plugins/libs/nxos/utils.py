@@ -13,24 +13,34 @@ from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 # Parsergen
 from parsergen import oper_fill_tabular
 
-# ConnectionUnifier
-from connectionunifier import unifier
+# abstract
+from abstract import Lookup
+
+# TFTPUtils
+import tftp_utils
+
+# Unicon
+from unicon.eal.dialogs import Statement, Dialog
+
+# ssh
+from ..ssh import Ssh
 
 # module logger
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list):
+def check_cores(device, core_list, **kwargs):
 
     # Init
     status = OK
 
     # Execute command to check for cores
     header = [ "VDC", "Module", "Instance",
-                "Process-name", "PID", "Date\(Year-Month-Day Time\)" ]
+                "Process\-name", "PID", "Date\(Year\-Month\-Day Time\)" ]
     output = oper_fill_tabular(device = device, 
                                show_command = 'show cores vdc-all',
                                header_fields = header, index = [5])
+
     if not output.entries:
         meta_info = "No cores found!"
         logger.info(banner(meta_info))
@@ -39,7 +49,7 @@ def check_cores(device, core_list):
     # Parse through output to collect core information (if any)
     for k in sorted(output.entries.keys(), reverse=True):
         row = output.entries[k]
-        date = row.get("Date\(Year-Month-Day Time\)", None)
+        date = row.get("Date\\(Year\\-Month\\-Day Time\\)", None)
         if not date:
             continue
         date_ = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
@@ -48,18 +58,19 @@ def check_cores(device, core_list):
         core_info = dict(module = row['Module'],
                          pid = row['PID'],
                          instance = row['Instance'],
-                         process = row['Process-name'],
+                         process = row['Process\\-name'],
                          date = date.replace(" ", "_"))
         core_list.append(core_info)
 
-        meta_info = "Core dump generated for process '{}' at {}".format(row['Process-name'], date_)
+        meta_info = "Core dump generated for process '{}' at {}".format(
+            row['Process\\-name'], date_)
         logger.error(banner(meta_info))
         status += CRITICAL(meta_info)
 
     return status
 
 
-def upload_to_server(device, core_list, **kwargs):
+def upload_to_server(device, core_list, *args, **kwargs):
 
     # Init
     status= OK
@@ -79,62 +90,64 @@ def upload_to_server(device, core_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Define the pattern to construct the connection dialog
-    pattern =\
-        {"Enter username:": "sendline({})".format(username),
-         "Password:": "sendline({})".format(password)}
+    # Got a tftp, set it up
+    # Get the information needed
+    scp = Ssh(ip=server)
+    scp.setup_scp()
 
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Get the corresponding tftputils implementation
+    tftpcls = Lookup.from_device(device).tftp_utils.tftp.tftp.TFTPUtils(
+        scp, kwargs['destination'])
 
     # Upload each core found
     for core in core_list:
-        cmd = get_upload_cmd(server = server, port = port,
-                                  dest = destination, protocol = protocol,
-                                  **core)
-        message = "Core dump upload attempt: {}".format(cmd)
+        # Sample command:
+        # copy core://<module-number>/<process-id>[/instance-num]
+        #      tftp:[//server[:port]][/path] vrf management
+        path = '{dest}/core_{pid}_{process}_{date}_{time}'.format(
+                                                   dest = destination,
+                                                   pid = core['pid'],
+                                                   process = core['process'],
+                                                   date = core['date'],
+                                                   time = time.time())
+        if port:
+            server = '{server}:{port}'.format(server = server, port = port)
+
+        if 'instance' in core:
+            pid = '{pid}/{instance}'.format(pid = core['pid'],
+                                            instance = core['instance'])
+
+        message = "Core dump upload attempt from {} to {} via server {}".format(
+            core['module'], destination, server)
+
+        # construction the module/pid for the copy process
+        core['core'] = '{module}/{pid}'.format(module = core['module'],
+                                               pid = core['pid'])
         try:
-            result = device.execute(cmd, timeout = timeout, reply=dialog)
-            if 'operation failed' in result:
-                meta_info = "Core upload operation failed: {}".format(message)
+            tftpcls.save_core(device=device, location='core:/',
+                              core=core['core'], server=server,
+                              destination=path, port=port, vrf='management',
+                              timeout=timeout, username=username,
+                              password=password)
+        except Exception as e:
+            if 'Tftp operation failed' in e:
+                meta_info = "Core dump upload operation failed: {}".format(
+                    message)
                 logger.error(banner(meta_info))
                 status += ERRORED(meta_info)
             else:
-                meta_info = "Core upload operation passed: {}".format(message)
-                logger.info(banner(meta_info))
-                status += OK(meta_info)
-        except Exception as e:
-            # Handle exception
-            logger.warning(e)
-            status += ERRORED("Failed: {}".format(message))
+                # Handle exception
+                logger.warning(e)
+                status += ERRORED("Failed: {}".format(message))
+
+        meta_info = "Core dump upload operation passed: {}".format(message)
+        logger.info(banner(meta_info))
+        status += OK(meta_info)
 
     return status
 
 
-def get_upload_cmd(module, pid, instance, server, port, dest, date, process, protocol):
-
-    # Sample command:
-    # copy core://<module-number>/<process-id>[/instance-num]
-    #      tftp:[//server[:port]][/path] vrf management
-    path = '{dest}/core_{pid}_{process}_{date}_{time}'.format(
-                                               dest = dest, pid = pid,
-                                               process = process,
-                                               date = date,
-                                               time = time.time())
-    if port:
-        server = '{server}:{port}'.format(server = server, port = port)
-
-    if instance:
-        pid = '{pid}/{instance}'.format(pid = pid, instance = instance)
-
-    cmd = 'copy core://{module}/{pid} ' \
-          '{protocol}://{server}/{path} vrf management'
-
-    return cmd.format(module = module, pid = pid, protocol = protocol,
-                      server = server, path = path)
-
-
-def clear_cores(device, core_list):
+def clear_cores(device, core_list, **kwargs):
 
     # Execute command to delete cores
     try:

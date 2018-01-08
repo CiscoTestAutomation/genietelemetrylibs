@@ -9,9 +9,17 @@ from ats.log.utils import banner
 # GenieMonitor
 from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
+# abstract
+from abstract import Lookup
+
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
-from unicon.eal.utils import expect_log
+
+# TFTPUtils
+import tftp_utils
+
+# ssh
+from ..ssh import Ssh
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -67,7 +75,7 @@ def check_cores(device, core_list, **kwargs):
     return status
 
 
-def upload_to_server(device, core_list, **kwargs):
+def upload_to_server(device, core_list, *args, **kwargs):
 
     # Init
     status= OK
@@ -87,55 +95,42 @@ def upload_to_server(device, core_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Create unicon dialog (for ftp)
-    dialog = Dialog([
-        Statement(pattern=r'Destination username:.*',
-                  action='sendline({username})'.format(username=username),
-                  loop_continue=True,
-                  continue_timer=False),
-        Statement(pattern=r'Destination password:.*',
-                  action='sendline({password})'.format(password=password),
-                  loop_continue=True,
-                  continue_timer=False),
-        Statement(pattern=r'Destination filename.*',
-                  action='sendline()',
-                  loop_continue=True,
-                  continue_timer=False),
-        ])
+    # Got a tftp, set it up
+    # Get the information needed
+    scp = Ssh(ip=server)
+    scp.setup_scp()
+
+    # Get the corresponding tftputils implementation
+    tftpcls = Lookup.from_device(device).tftp_utils.tftp.tftp.TFTPUtils(
+        scp, kwargs['destination'])
 
     # Upload each core found
     for item in core_list:
-        cmd = get_upload_cmd(server = server, port = port, dest = destination, 
-                             protocol = protocol, core = item['core'], 
-                             location = item['location'])
-        message = "Core dump upload attempt: {}".format(cmd)
+
+        message = "Core dump upload attempt from {} to {} via server {}".format(
+            item['location'], destination, server)
+
         try:
-            result = device.execute(cmd, timeout = timeout, reply=dialog)
-            if 'operation failed' in result or 'Error' in result:
-                meta_info = "Core upload operation failed: {}".format(message)
+            tftpcls.save_core(device, item['location'], item['core'],
+                                       server, destination, port,
+                                       timeout=timeout, username=username,
+                                       password=password)
+        except Exception as e:
+            if 'Tftp operation failed' in e:
+                meta_info = "Core dump upload operation failed: {}".format(
+                    message)
                 logger.error(banner(meta_info))
                 status += ERRORED(meta_info)
             else:
-                meta_info = "Core upload operation passed: {}".format(message)
-                logger.info(banner(meta_info))
-                status += OK(meta_info)
-        except Exception as e:
-            # Handle exception
-            logger.warning(e)
-            status += ERRORED("Failed: {}".format(message))
+                # Handle exception
+                logger.warning(e)
+                status += ERRORED("Failed: {}".format(message))
+
+        meta_info = "Core dump upload operation passed: {}".format(message)
+        logger.info(banner(meta_info))
+        status += OK(meta_info)
 
     return status
-
-
-def get_upload_cmd(server, port, dest, protocol, core, location):
-    
-    if port:
-        server = '{server}:{port}'.format(server = server, port = port)
-
-    cmd = 'copy {location}/{core} {protocol}://{server}/{dest}/{core}'
-
-    return cmd.format(location=location, core=core, protocol=protocol,
-                      server=server, dest=dest)
 
 
 def clear_cores(device, core_list, **kwargs):

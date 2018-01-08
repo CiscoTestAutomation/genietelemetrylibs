@@ -9,8 +9,18 @@ from ats.log.utils import banner
 # GenieMonitor
 from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
-# ConnectionUnifier
-from connectionunifier import unifier
+# abstract
+from abstract import Lookup
+
+# TFTPUtils
+import tftp_utils
+
+# Unicon
+from unicon.eal.dialogs import Statement, Dialog
+from unicon.eal.utils import expect_log
+
+# ssh
+from ..ssh import Ssh
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -20,6 +30,21 @@ def check_cores(device, core_list, crashreport_list, timeout):
 
     # Init
     status = OK
+
+    # Construct the core pattern to be parsed later
+    # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
+    core_pattern = re.compile(r'(?P<number>(\d+)) '
+        '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
+        '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
+        '+(?P<time>(\S+)) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
+
+    # Construct the crashreport pattern to be parsed later
+    # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC
+    crashinfo_pattern = re.compile(r'(?P<number>(\d+)) '
+        '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
+        '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
+        '+(?P<time>(\S+)) +(?P<timezone>(\S+)) '
+        '+(?P<core>(crashinfo.*))$', re.IGNORECASE)
 
     # Execute command to check for cores and crashinfo reports
     for location in ['flash:/core', 'bootflash:/core', 'harddisk:/core', 'crashinfo:']:
@@ -48,12 +73,6 @@ def check_cores(device, core_list, crashreport_list, timeout):
         for line in output.splitlines():
             line = line.strip()
 
-            # Parse through output to collect core information (if any)
-            # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
-            core_pattern = re.compile(r'(?P<number>(\d+)) '
-                '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
-                '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
-                '+(?P<time>(\S+)) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
             m = core_pattern.match(line)
             if m:
                 core = m.groupdict()['core']
@@ -65,13 +84,6 @@ def check_cores(device, core_list, crashreport_list, timeout):
                 core_list.append(core_info)
                 continue
 
-            # Parse through output to collect crashinfo reports (if any)
-            # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC
-            crashinfo_pattern = re.compile(r'(?P<number>(\d+)) '
-                '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
-                '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
-                '+(?P<time>(\S+)) +(?P<timezone>(\S+)) '
-                '+(?P<core>(crashinfo.*))$', re.IGNORECASE)
             m = crashinfo_pattern.match(line)
             if m:
                 crashreport = m.groupdict()['core']
@@ -116,66 +128,62 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Define the pattern to construct the connection dialog
-    pattern =\
-        {"Address or name of remote host.*": "sendline()",
-         "Destination filename.*": "sendline()"}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
-
     # preparing the full list to iterate over
     full_list = core_list + crashreport_list
 
-    # Upload each core found
+    # Got a tftp, set it up
+    # Get the information needed
+    scp = Ssh(ip=server)
+    scp.setup_scp()
+
+    # Get the corresponding tftputils implementation
+    tftpcls = Lookup.from_device(device).tftp_utils.tftp.tftp.TFTPUtils(
+        scp, kwargs['destination'])
+
+    if port:
+        server = '{server}:{port}'.format(server=server, port=port)
+
+    # Upload each core/crashinfo report found
     for item in full_list:
-        cmd = get_upload_cmd(server = server, port = port, dest = destination, 
-                             protocol = protocol, core = item['core'], 
-                             location = item['location'])
 
         if 'crashinfo' in item['core']:
             file_type = 'Crashreport'
         else:
             file_type = 'Core'
 
-        message = "{} upload attempt: {}".format(file_type, cmd)
+        message = "{} upload attempt from {} to {} via server {}".format(
+            file_type, item['location'], destination, server)
+
         try:
-            result = device.execute(cmd, timeout = timeout, reply=dialog)
-            if 'operation failed' in result or 'Error' in result:
-                meta_info = "{} upload operation failed: {}".format(file_type, message)
+            tftpcls.save_core(device, item['location'], item['core'], server,
+                destination, port, timeout=timeout)
+        except Exception as e:
+            if 'Tftp operation failed' in e:
+                meta_info = "{} upload operation failed: {}".format(file_type,
+                    message)
                 logger.error(banner(meta_info))
                 status += ERRORED(meta_info)
             else:
-                meta_info = "{} upload operation passed: {}".format(file_type, message)
-                logger.info(banner(meta_info))
-                status += OK(meta_info)
-        except Exception as e:
-            # Handle exception
-            logger.warning(e)
-            status += ERRORED("Failed: {}".format(message))
+                # Handle exception
+                logger.warning(e)
+                status += ERRORED("Failed: {}".format(message))
+
+        meta_info = "{} upload operation passed: {}".format(file_type, message)
+        logger.info(banner(meta_info))
+        status += OK(meta_info)
 
     return status
 
 
-def get_upload_cmd(server, port, dest, protocol, core, location):
-    
-    if port:
-        server = '{server}:{port}'.format(server = server, port = port)
-
-    cmd = 'copy {location}/{core} {protocol}://{server}/{dest}/{core}'
-
-    return cmd.format(location=location, core=core, protocol=protocol,
-                      server=server, dest=dest)
-
-
 def clear_cores(device, core_list, crashreport_list):
 
-    # define the pattern to construct the connection dialog
-    pattern =\
-        {"Delete.*": "sendline()"}
-
-    # Construct the dialog as per the device connection
-    dialog = unifier.handle_dialog(device, pattern)
+    # Create dialog for response
+    dialog = Dialog([
+        Statement(pattern=r'Delete.*',
+                  action='sendline()',
+                  loop_continue=True,
+                  continue_timer=False),
+        ])
 
     # preparing the full list to iterate over
     full_list = core_list + crashreport_list
@@ -185,17 +193,17 @@ def clear_cores(device, core_list, crashreport_list):
         try:
             # Execute delete command for this core
             cmd = 'delete {location}/{core}'.format(
-                    core=item['core'],location=item['location'])
+                core=item['core'],location=item['location'])
             output = device.execute(cmd, timeout=300, reply=dialog)
             # Log to user
             meta_info = 'Successfully deleted {location}/{core}'.format(
-                        core=item['core'],location=item['location'])
+                core=item['core'],location=item['location'])
             logger.info(banner(meta_info))
             return OK(meta_info)
         except Exception as e:
             # Handle exception
             logger.warning(e)
             meta_info = 'Unable to delete {location}/{core}'.format(
-                        core=item['core'],location=item['location'])
+                core=item['core'],location=item['location'])
             logger.error(banner(meta_info))
             return ERRORED(meta_info)

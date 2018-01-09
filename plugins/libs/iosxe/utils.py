@@ -13,14 +13,12 @@ from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 from abstract import Lookup
 
 # TFTPUtils
-import tftp_utils
+import filetransferutils
+from filetransferutils.ssh import Ssh
 
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
 from unicon.eal.utils import expect_log
-
-# ssh
-from ..ssh import Ssh
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -136,8 +134,8 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
     scp = Ssh(ip=server)
     scp.setup_scp()
 
-    # Get the corresponding tftputils implementation
-    tftpcls = Lookup.from_device(device).tftp_utils.tftp.tftp.TFTPUtils(
+    # Get the corresponding filetransferutils Utils implementation
+    tftpcls = Lookup('tftp', device.os).filetransferutils.utils.Utils(
         scp, kwargs['destination'])
 
     if port:

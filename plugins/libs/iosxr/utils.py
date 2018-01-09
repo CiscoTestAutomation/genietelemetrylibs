@@ -16,10 +16,8 @@ from abstract import Lookup
 from unicon.eal.dialogs import Statement, Dialog
 
 # TFTPUtils
-import tftp_utils
-
-# ssh
-from ..ssh import Ssh
+import filetransferutils
+from filetransferutils.ssh import Ssh
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -100,8 +98,8 @@ def upload_to_server(device, core_list, *args, **kwargs):
     scp = Ssh(ip=server)
     scp.setup_scp()
 
-    # Get the corresponding tftputils implementation
-    tftpcls = Lookup.from_device(device).tftp_utils.tftp.tftp.TFTPUtils(
+    # Get the corresponding filetransferutils Utils implementation
+    tftpcls = Lookup('tftp', device.os).filetransferutils.utils.Utils(
         scp, kwargs['destination'])
 
     # Upload each core found

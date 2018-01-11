@@ -99,7 +99,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
     scp.setup_scp()
 
     # Get the corresponding filetransferutils Utils implementation
-    tftpcls = Lookup('tftp', device.os).filetransferutils.utils.Utils(
+    tftpcls = Lookup(device.os).filetransferutils.tftp.utils.Utils(
         scp, kwargs['destination'])
 
     # Upload each core found

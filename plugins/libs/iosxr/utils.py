@@ -110,9 +110,9 @@ def upload_to_server(device, core_list, *args, **kwargs):
 
         try:
             tftpcls.save_core(device, item['location'], item['core'],
-                                       server, destination, port,
-                                       timeout=timeout, username=username,
-                                       password=password)
+                                       server=server, destination=destination,
+                                       port=port, timeout=timeout,
+                                       username=username, password=password)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "Core dump upload operation failed: {}".format(

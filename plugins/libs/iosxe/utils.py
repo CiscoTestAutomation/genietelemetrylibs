@@ -153,8 +153,9 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             file_type, item['location'], destination, server)
 
         try:
-            tftpcls.save_core(device, item['location'], item['core'], server,
-                destination, port, timeout=timeout)
+            tftpcls.save_core(device, item['location'], item['core'],
+                server=server, destination=destination, port=port,
+                timeout=timeout)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "{} upload operation failed: {}".format(file_type,

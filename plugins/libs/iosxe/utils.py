@@ -153,7 +153,7 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             file_type, item['location'], destination, server)
 
         try:
-            tftpcls.save_core(device, item['location'], item['core'],
+            tftpcls.copy_core(device, item['location'], item['core'],
                 server=server, destination=destination, port=port,
                 timeout=timeout)
         except Exception as e:

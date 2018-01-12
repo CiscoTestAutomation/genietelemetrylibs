@@ -122,7 +122,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
         core['core'] = '{module}/{pid}'.format(module = core['module'],
                                                pid = core['pid'])
         try:
-            tftpcls.save_core(device=device, location='core:/',
+            tftpcls.copy_core(device=device, location='core:/',
                               core=core['core'], server=server,
                               destination=path, port=port, vrf='management',
                               timeout=timeout, username=username,

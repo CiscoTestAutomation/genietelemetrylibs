@@ -1,8 +1,8 @@
-GenieMonitor Libraries
-----------------------
+Telemetry Libraries
+-------------------
 
-Geniemonitor Libraries file hierarchy
--------------------------------------
+Telemetry Libraries file hierarchy
+----------------------------------
 plugins/
 |-- __init__.py
 |-- crashdumps
@@ -32,8 +32,8 @@ plugins/
 
 Plugin Template:
 ----------------
-cd $VIRTUAL_ENV/projects/geniemonitor_libs/template
+cd $VIRTUAL_ENV/projects/telemetry_libs/template
 
 Plugin Example:
 ---------------
-cd $VIRTUAL_ENV/projects/geniemonitor_libs/plugins/crashdumps
+cd $VIRTUAL_ENV/projects/telemetry_libs/plugins/crashdumps

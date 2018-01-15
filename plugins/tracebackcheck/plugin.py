@@ -13,8 +13,8 @@ from ats.datastructures import classproperty
 from ats.datastructures.logic import logic_str
 
 # GenieMonitor
-from geniemonitor.plugins.bases import BasePlugin
-from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from telemetry.plugins.bases import BasePlugin
+from telemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # module logger
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ GenieMonitor HelloWorld Plugin for IOSXR.
 
 # GenieMonitor
 from ..plugin import Plugin as BasePlugin
-from geniemonitor.results import OK, ERRORED
+from telemetry.results import OK, ERRORED
 
 
 class Plugin(BasePlugin):

@@ -5,7 +5,7 @@ import logging
 
 # GenieMonitor
 from ..plugin import Plugin as BasePlugin
-from geniemonitor.results import OK
+from telemetry.results import OK
 
 # module logger
 logger = logging.getLogger(__name__)

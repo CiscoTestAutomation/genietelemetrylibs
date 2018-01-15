@@ -7,9 +7,9 @@ from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
 # GenieMonitor
-from geniemonitor.plugins.bases import BasePlugin
-from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
-from geniemonitor_libs.plugins import libs
+from telemetry.plugins.bases import BasePlugin
+from telemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from telemetry_libs.plugins import libs
 
 # Abstract
 from abstract import Lookup
@@ -98,8 +98,7 @@ class Plugin(BasePlugin):
 
         # Execute command to check for cores
         status += lookup.libs.utils.check_cores(device, self.core_list,
-                                                crashreport_list=\
-                                                self.crashreport_list,
+                                                crashreport_list=self.crashreport_list,
                                                 timeout=timeout)
 
         # User requested upload cores to server

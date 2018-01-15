@@ -8,7 +8,7 @@ from datetime import datetime
 from ats.log.utils import banner
 
 # GenieMonitor
-from geniemonitor.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from telemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # Parsergen
 from parsergen import oper_fill_tabular

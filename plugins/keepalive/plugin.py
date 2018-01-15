@@ -3,7 +3,7 @@ GenieMonitor KeepAlive Plugin.
 '''
 
 # GenieMonitor
-from geniemonitor.plugins.bases import BasePlugin
+from telemetry.plugins.bases import BasePlugin
 
 class Plugin(BasePlugin):
 

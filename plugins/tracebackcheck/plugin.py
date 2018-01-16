@@ -31,7 +31,7 @@ class Plugin(BasePlugin):
         
         # logic_pattern
         # -------------
-        parser.add_argument('-logic_pattern',
+        parser.add_argument('--logic_pattern',
                             action="store",
                             default="And('Traceback')",
                             help='Specify logical expression for patterns to '
@@ -40,14 +40,14 @@ class Plugin(BasePlugin):
                                  'is to check for Tracebacks.')
         # clean_up
         # --------
-        parser.add_argument('-clean_up',
+        parser.add_argument('--clean_up',
                             action="store",
                             default=False,
                             help='Specify whether to clear all warnings and '
                                  'tracebacks after reporting error')
         # timeout
         # -------
-        parser.add_argument('-timeout',
+        parser.add_argument('--timeout',
                             action="store",
                             default=300,
                             help='Specify duration (in seconds) to wait before '

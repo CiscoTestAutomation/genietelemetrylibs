@@ -1,8 +1,8 @@
 ''' 
-GenieMonitor Crashdumps Plugin for IOSXE
+GenieTelemetry Crashdumps Plugin for IOSXE
 '''
 
-# GenieMonitor
+# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
 
 

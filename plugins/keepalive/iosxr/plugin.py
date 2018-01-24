@@ -1,11 +1,11 @@
 ''' 
-GenieMonitor KeepAlive Plugin for IOS-XR.
+GenieTelemetry KeepAlive Plugin for IOS-XR.
 '''
 import logging
 
-# GenieMonitor
+# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
-from telemetry.results import OK
+from genietelemetry.results import OK
 
 # module logger
 logger = logging.getLogger(__name__)

@@ -1,8 +1,8 @@
 ''' 
-GenieMonitor Crashdumps Plugin for NXOS
+GenieTelemetry Crashdumps Plugin for NXOS
 '''
 
-# GenieMonitor
+# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
 
 

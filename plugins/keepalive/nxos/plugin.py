@@ -1,11 +1,11 @@
 ''' 
-GenieMonitor KeepAlive Plugin for NXOS.
+GenieTelemetry KeepAlive Plugin for NXOS.
 '''
 import logging
 
-# GenieMonitor
+# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
-from telemetry.results import OK
+from genietelemetry.results import OK
 
 # module logger
 logger = logging.getLogger(__name__)

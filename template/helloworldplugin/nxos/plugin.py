@@ -1,10 +1,10 @@
 ''' 
-GenieMonitor HelloWorld Plugin for NXOS.
+GenieTelemetry HelloWorld Plugin for NXOS.
 '''
 
-# GenieMonitor
+# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
-from telemetry.results import OK, ERRORED
+from genietelemetry.results import OK, ERRORED
 
 
 class Plugin(BasePlugin):

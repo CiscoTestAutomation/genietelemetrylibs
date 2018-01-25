@@ -7,7 +7,7 @@ import logging
 from ats.log.utils import banner
 
 # GenieMonitor
-from telemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # abstract
 from abstract import Lookup

@@ -7,9 +7,9 @@ from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
 # GenieMonitor
-from telemetry.plugins.bases import BasePlugin
-from telemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
-from telemetry_libs.plugins import libs
+from genietelemetry.plugins.bases import BasePlugin
+from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genietelemetry_libs.plugins import libs
 
 # Abstract
 from abstract import Lookup

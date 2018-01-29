@@ -131,7 +131,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
     return status
 
 
-def clear_cores(device, core_list, **kwargs):
+def clear_cores(device, core_list, crashreport_list, **kwargs):
 
     # Create dialog for response
     dialog = Dialog([
@@ -141,8 +141,11 @@ def clear_cores(device, core_list, **kwargs):
                   continue_timer=False),
         ])
 
+    # preparing the full list to iterate over
+    full_list = core_list + crashreport_list
+
     # Delete cores from the device
-    for item in core_list:
+    for item in full_list:
         try:
             # Execute delete command for this core
             cmd = 'delete {location}/{core}'.format(

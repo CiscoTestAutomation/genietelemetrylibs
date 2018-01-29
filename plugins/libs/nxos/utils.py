@@ -145,7 +145,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
     return status
 
 
-def clear_cores(device, core_list, **kwargs):
+def clear_cores(device, core_list, crashreport_list, **kwargs):
 
     # Execute command to delete cores
     try:

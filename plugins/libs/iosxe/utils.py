@@ -74,7 +74,8 @@ def check_cores(device, core_list, crashreport_list, timeout):
             m = core_pattern.match(line)
             if m:
                 core = m.groupdict()['core']
-                meta_info = "Core dump generated:\n'{}'".format(core)
+                meta_info = "Core dump generated:\n'{}' on device {}".format(
+                    core, device.name)
                 logger.error(banner(meta_info))
                 status += CRITICAL(meta_info)
                 core_info = dict(location = location,
@@ -85,7 +86,8 @@ def check_cores(device, core_list, crashreport_list, timeout):
             m = crashinfo_pattern.match(line)
             if m:
                 crashreport = m.groupdict()['core']
-                meta_info = "Crashinfo report generated:\n'{}'".format(crashreport)
+                meta_info = "Crashinfo report generated:\n'{}' on device {}".\
+                    format(core, device.name)
                 logger.error(banner(meta_info))
                 status += CRITICAL(meta_info)
                 crashreport_info = dict(location = location,
@@ -94,12 +96,14 @@ def check_cores(device, core_list, crashreport_list, timeout):
                 continue
 
         if not core_list:
-            meta_info = "No cores found at location: {}".format(location)
+            meta_info = "No cores found at location: {} on device {}".format(
+                location, device.name)
             logger.info(banner(meta_info))
             status += OK(meta_info)
 
         if not crashreport_list:
-            meta_info = "No crashreports found at location: {}".format(location)
+            meta_info = "No crashreports found at location: {} on device {}".\
+                format(location, device.name)
             logger.info(banner(meta_info))
             status += OK(meta_info)
 

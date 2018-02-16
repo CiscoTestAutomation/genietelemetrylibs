@@ -60,8 +60,8 @@ def check_cores(device, core_list, **kwargs):
                          date = date.replace(" ", "_"))
         core_list.append(core_info)
 
-        meta_info = "Core dump generated for process '{}' at {}".format(
-            row['Process\\-name'], date_)
+        meta_info = "Core dump generated for process '{}' at {} on device {}".\
+            format(row['Process\\-name'], date_, device.name)
         logger.error(banner(meta_info))
         status += CRITICAL(meta_info)
 

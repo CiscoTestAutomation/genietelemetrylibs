@@ -58,7 +58,8 @@ def check_cores(device, core_list, **kwargs):
                     re.search(pattern2, line, re.IGNORECASE)
             if match:
                 core = match.groupdict()['core']
-                meta_info = "Core dump generated:\n'{}'".format(core)
+                meta_info = "Core dump generated:\n'{}' on device {}".format(
+                    core, device.name)
                 logger.error(banner(meta_info))
                 status += CRITICAL(meta_info)
                 core_info = dict(location = location,
@@ -66,7 +67,8 @@ def check_cores(device, core_list, **kwargs):
                 core_list.append(core_info)
 
         if not core_list:
-            meta_info = "No cores found at location: {}".format(location)
+            meta_info = "No cores found at location: {} on device {}".format(
+                location, device.name)
             logger.info(banner(meta_info))
             status += OK(meta_info)
 

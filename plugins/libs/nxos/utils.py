@@ -60,8 +60,8 @@ def check_cores(device, core_list, **kwargs):
                          date = date.replace(" ", "_"))
         core_list.append(core_info)
 
-        meta_info = "Core dump generated for process '{}' at {} on device {}".\
-            format(row['Process\\-name'], date_, device.name)
+        meta_info = "Core dump generated for process '{}' at {}".\
+            format(row['Process\\-name'], date_)
         logger.error(banner(meta_info))
         status += CRITICAL(meta_info)
 
@@ -161,3 +161,17 @@ def clear_cores(device, core_list, crashreport_list, **kwargs):
         status = ERRORED(meta_info)
 
     return status
+
+def check_tracebacks(device, timeout, **kwargs):
+
+    # Execute command to check for tracebacks
+    output = device.execute('show logging logfile', timeout=timeout)
+
+    return output
+
+def clear_tracebacks(device, timeout, **kwargs):
+
+    # Execute command to clear tracebacks
+    output = device.execute('clear logging logfile', timeout=timeout)
+
+    return output

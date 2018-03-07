@@ -58,8 +58,7 @@ def check_cores(device, core_list, **kwargs):
                     re.search(pattern2, line, re.IGNORECASE)
             if match:
                 core = match.groupdict()['core']
-                meta_info = "Core dump generated:\n'{}' on device {}".format(
-                    core, device.name)
+                meta_info = "Core dump generated:\n'{}'".format(core)
                 logger.error(banner(meta_info))
                 status += CRITICAL(meta_info)
                 core_info = dict(location = location,
@@ -67,8 +66,7 @@ def check_cores(device, core_list, **kwargs):
                 core_list.append(core_info)
 
         if not core_list:
-            meta_info = "No cores found at location: {} on device {}".format(
-                location, device.name)
+            meta_info = "No cores found at location: {}".format(location)
             logger.info(banner(meta_info))
             status += OK(meta_info)
 
@@ -165,3 +163,17 @@ def clear_cores(device, core_list, crashreport_list, **kwargs):
                         core=item['core'],location=item['location'])
             logger.error(banner(meta_info))
             return ERRORED(meta_info)
+
+def check_tracebacks(device, timeout, **kwargs):
+
+    # Execute command to check for tracebacks
+    output = device.execute('show logging', timeout=timeout)
+
+    return output
+
+def clear_tracebacks(device, timeout, **kwargs):
+
+    # Execute command to clear tracebacks
+    output = device.execute('clear logging', timeout=timeout)
+
+    return output

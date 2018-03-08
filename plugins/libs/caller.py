@@ -49,7 +49,7 @@ def health_check(section):
                     section.passx("GenieTelemetry caught an anomaly {}".\
                         format(section.parent.testcase_monitor_result[section]))
         else:
-            log.warning("GenieTelemetry config yaml file is missing "
+            section.failed("GenieTelemetry config yaml file is missing "
                 "'--genietelemetry <path to yaml file>'")
     except Exception as e:
         section.skipped("GenieTelemetry encountered an issue: {}".format(e))

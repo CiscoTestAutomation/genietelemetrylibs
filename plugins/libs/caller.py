@@ -33,28 +33,23 @@ def health_check(section):
             section.parent.healthCheck = Manager(
                 testbed=section.parent.parameters['testbed'])
 
-        # Check for --genietelemetry_enable value (True/False)
-        if section.parent.healthCheck.args.genietelemetry_enable:
+        # Check for genietelemetry config yaml file
+        if section.parent.healthCheck.args.genietelemetry:
             monitor = section.parent.healthCheck.run(section,
                 testbed=section.parent.parameters['testbed'])
+            # Checking the GenieTelemetry call final result
+            final_result = OK
+            for plgn in section.parent.testcase_monitor_result[section].keys():
+                for dev in section.parent.testcase_monitor_result[section][plgn]:
+                    final_result += dev['status']
+
+            # Only overwrite section result if testcase passed
+            if section.result == Passed:
+                if not final_result.name == 'ok':
+                    section.passx("GenieTelemetry caught an anomaly {}".\
+                        format(section.parent.testcase_monitor_result[section]))
         else:
-            log.info("GenieTelemetry enable key is set to False "
-                "'--genietelemetry_enable False', Set it to True or don't "
-                "provide it (default value is 'True')")
-
-        # Checking the GenieTelemetry call final result
-        final_result = OK
-        for plgn in section.parent.testcase_monitor_result[section].keys():
-            for dev in section.parent.testcase_monitor_result[section][plgn]:
-                final_result += dev['status']
-
-        # Only overwrite section result if testcase passed
-        if section.result == Passed:
-            if not final_result.name == 'ok':
-                section.passx("GenieTelemetry caught an anomaly {}".\
-                    format(section.parent.testcase_monitor_result[section]))
-    except Exception:
-        # Section will skip since user didn't disable GenieTelemetry
-        # and an exception has been caught
-        section.skipped('Monitoring config.yaml file is missing so testbed '
-            'monitoring functionality is disabled')
+            log.warning("GenieTelemetry config yaml file is missing "
+                "'--genietelemetry <path to yaml file>'")
+    except Exception as e:
+        section.skipped("GenieTelemetry encountered an issue: {}".format(e))

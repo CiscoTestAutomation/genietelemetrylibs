@@ -16,7 +16,7 @@ from ats.datastructures.logic import logic_str
 from ats.datastructures import classproperty
 
 # GenieTelemetry
-from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 from genietelemetry_libs.plugins import libs
 
 # Abstract

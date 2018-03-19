@@ -13,7 +13,7 @@ from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
 # GenieTelemetry
-from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genie.telemetry.status import OK, CRITICAL
 from genietelemetry_libs.plugins import libs
 
 # Abstract

@@ -15,9 +15,8 @@ from abstract import Lookup
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
 
-# TFTPUtils
-import filetransferutils
-from filetransferutils.ssh import Ssh
+# Import FileUtils core utilities
+from ats.utils.fileutils import FileUtils
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -93,15 +92,6 @@ def upload_to_server(device, core_list, *args, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Got a tftp, set it up
-    # Get the information needed
-    scp = Ssh(ip=server)
-    scp.setup_scp()
-
-    # Get the corresponding filetransferutils Utils implementation
-    tftpcls = Lookup(device.os).filetransferutils.tftp.utils.Utils(
-        scp, kwargs['destination'])
-
     # Upload each core found
     for item in core_list:
 
@@ -109,10 +99,22 @@ def upload_to_server(device, core_list, *args, **kwargs):
             item['location'], destination, server)
 
         try:
-            tftpcls.copy_core(device, item['location'], item['core'],
-                                       server=server, destination=destination,
-                                       port=port, timeout=timeout,
-                                       username=username, password=password)
+            # Check if filetransfer has been added to device before or not
+            if not hasattr(device, 'filetransfer'):
+                device.filetransfer = FileUtils.from_device(device)
+
+            to_URL = '{protocol}://{address}/{path}/{filename}'.format(
+                protocol=protocol,
+                address=server,
+                path=destination,
+                filename=item['core'])
+
+            from_URL = '{location}//{core_path}'.format(
+                location=item['location'], core_path=item['core'])
+
+            device.filetransfer.copyfile(device=device,
+                                         from_file_url=from_URL,
+                                         to_file_url=to_URL)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "Core dump upload operation failed: {}".format(

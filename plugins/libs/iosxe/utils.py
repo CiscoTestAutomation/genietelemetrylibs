@@ -12,9 +12,8 @@ from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 # abstract
 from abstract import Lookup
 
-# TFTPUtils
-import filetransferutils
-from filetransferutils.ssh import Ssh
+# Import FileUtils core utilities
+from ats.utils.fileutils import FileUtils
 
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
@@ -132,15 +131,6 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
     # preparing the full list to iterate over
     full_list = core_list + crashreport_list
 
-    # Got a tftp, set it up
-    # Get the information needed
-    scp = Ssh(ip=server)
-    scp.setup_scp()
-
-    # Get the corresponding filetransferutils Utils implementation
-    tftpcls = Lookup(device.os).filetransferutils.tftp.utils.Utils(
-        scp, kwargs['destination'])
-
     if port:
         server = '{server}:{port}'.format(server=server, port=port)
 
@@ -156,9 +146,21 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             file_type, item['location'], destination, server)
 
         try:
-            tftpcls.copy_core(device, item['location'], item['core'],
-                server=server, destination=destination, port=port,
-                timeout=timeout)
+            # Check if filetransfer has been added to device before or not
+            if not hasattr(device, 'filetransfer'):
+                device.filetransfer = FileUtils.from_device(device)
+
+            to_URL = '{protocol}://{address}/{path}'.format(
+                protocol=protocol,
+                address=server,
+                path=destination)
+
+            from_URL = '{location}//{core_path}'.format(
+                location=item['location'], core_path=item['core'])
+
+            device.filetransfer.copyfile(device=device,
+                                         from_file_url=from_URL,
+                                         to_file_url=to_URL)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "{} upload operation failed: {}".format(file_type,

@@ -16,9 +16,8 @@ from parsergen import oper_fill_tabular
 # abstract
 from abstract import Lookup
 
-# TFTPUtils
-import filetransferutils
-from filetransferutils.ssh import Ssh
+# Import FileUtils core utilities
+from ats.utils.fileutils import FileUtils
 
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
@@ -88,15 +87,6 @@ def upload_to_server(device, core_list, *args, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Got a tftp, set it up
-    # Get the information needed
-    scp = Ssh(ip=server)
-    scp.setup_scp()
-
-    # Get the corresponding filetransferutils Utils implementation
-    tftpcls = Lookup(device.os).filetransferutils.tftp.utils.Utils(
-        scp, kwargs['destination'])
-
     # Upload each core found
     for core in core_list:
         # Sample command:
@@ -122,11 +112,20 @@ def upload_to_server(device, core_list, *args, **kwargs):
         core['core'] = '{module}/{pid}'.format(module = core['module'],
                                                pid = core['pid'])
         try:
-            tftpcls.copy_core(device=device, location='core:/',
-                              core=core['core'], server=server,
-                              destination=path, port=port, vrf='management',
-                              timeout=timeout, username=username,
-                              password=password)
+            # Check if filetransfer has been added to device before or not
+            if not hasattr(device, 'filetransfer'):
+                device.filetransfer = FileUtils.from_device(device)
+
+            to_URL = '{protocol}://{address}/{path}'.format(
+                protocol=protocol,
+                address=server,
+                path=path)
+
+            from_URL = 'core://{core_path}'.format(core_path=core['core'])
+
+            device.filetransfer.copyfile(device=device,
+                                         from_file_url=from_URL,
+                                         to_file_url=to_URL)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "Core dump upload operation failed: {}".format(

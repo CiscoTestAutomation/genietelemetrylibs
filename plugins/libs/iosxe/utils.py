@@ -24,28 +24,35 @@ from unicon.eal.utils import expect_log
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list, crashreport_list, timeout):
+def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
 
     # Init
     status = OK
 
     # Construct the core pattern to be parsed later
     # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
-    core_pattern = re.compile(r'(?P<number>(\d+)) '
-        '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
-        '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
-        '+(?P<time>(\S+)) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
+    core_pattern = re.compile(r'(?P<number>\d+) '
+        '+(?P<permissions>[rw\-]+) +(?P<filesize>\d+) '
+        '+(?P<month>\w+) +(?P<date>\d+) +(?P<year>\d+) '
+        '+(?P<time>[\w\:]+) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
 
     # Construct the crashreport pattern to be parsed later
     # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC
-    crashinfo_pattern = re.compile(r'(?P<number>(\d+)) '
-        '+(?P<permissions>(\S+)) +(?P<filesize>(\d+)) '
-        '+(?P<month>(\S+)) +(?P<date>(\d+)) +(?P<year>(\d+)) '
-        '+(?P<time>(\S+)) +(?P<timezone>(\S+)) '
+    crashinfo_pattern = re.compile(r'(?P<number>\d+) '
+        '+(?P<permissions>[rw\-]+) +(?P<filesize>\d+) '
+        '+(?P<month>\w+) +(?P<date>\d+) +(?P<year>\d+) '
+        '+(?P<time>[\w\:]+) +(?P<timezone>(\S+)) '
         '+(?P<core>(crashinfo.*))$', re.IGNORECASE)
 
+    # define default checking dir
+    locations = ['flash:/core', 'bootflash:/core', 'harddisk:/core', 'crashinfo:']
+
+    # if provided 
+    for crash_string in crash_type:
+        locations.append('flash:{}*'.format(crash_string))
+
     # Execute command to check for cores and crashinfo reports
-    for location in ['flash:/core', 'bootflash:/core', 'harddisk:/core', 'crashinfo:']:
+    for location in locations:
         try:
             output = device.execute('dir {}'.format(location), timeout=timeout)
         except Exception as e:
@@ -60,7 +67,8 @@ def check_cores(device, core_list, crashreport_list, timeout):
 
             continue
         
-        if 'Invalid input detected' in output:
+        if 'Invalid input detected' in output or \
+           'No such file' in output :
             logger.warning(banner("Location '{}' does not exist on device".format(location)))
             continue
         elif not output:
@@ -93,6 +101,20 @@ def check_cores(device, core_list, crashreport_list, timeout):
                     core = crashreport)
                 crashreport_list.append(crashreport_info)
                 continue
+
+            pattern = location.split(':')[1]
+            if pattern and '/' not in pattern:
+                m = re.compile(r'{}'.format(pattern)).match(line)
+                if m:
+                    crashreport = line
+                    meta_info = "Crashinfo report generated:\n'{}' on device {}".\
+                        format(line, device.name)
+                    logger.error(banner(meta_info))
+                    status += CRITICAL(meta_info)
+                    crashreport_info = dict(location = location,
+                        core = crashreport)
+                    crashreport_list.append(crashreport_info)
+                    continue
 
         if not core_list:
             meta_info = "No cores found at location: {}".format(

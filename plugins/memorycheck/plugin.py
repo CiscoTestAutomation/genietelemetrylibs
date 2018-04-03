@@ -1,26 +1,20 @@
 '''
-GenieTelemetry Crashdumps Plugin
+GenieMonitor Crashdumps Plugin
 '''
-
-# Python
-import copy
-
-# argparse
-from argparse import ArgumentParser
 
 # ATS
 from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
-# GenieTelemetry
-from genie.telemetry.status import OK, CRITICAL
+# GenieMonitor
+from genietelemetry.plugins.bases import BasePlugin
+from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 from genietelemetry_libs.plugins import libs
 
 # Abstract
 from abstract import Lookup
 
-
-class Plugin(object):
+class Plugin(BasePlugin):
 
     __plugin_name__ = 'Crash Dumps Plugin'
 
@@ -31,84 +25,66 @@ class Plugin(object):
 
         # upload
         # ------
-        parser.add_argument('--crashdumps_upload',
+        parser.add_argument('--upload',
                             action="store",
                             default=False,
                             help='Specify whether upload core dumps')
         # clean_up
         # --------
-        parser.add_argument('--crashdumps_clean_up',
+        parser.add_argument('--clean_up',
                             action="store",
                             default=False,
                             help='Specify whether clear core after upload')
         # protocol
         # --------
-        parser.add_argument('--crashdumps_protocol',
+        parser.add_argument('--protocol',
                             action="store",
                             default=None,
                             help = 'Specify upload protocol\ndefault to TFTP')
         # server
         # ------
-        parser.add_argument('--crashdumps_server',
+        parser.add_argument('--server',
                             action="store",
                             default=None,
                             help = 'Specify upload Server\ndefault uses '
                                    'servers information from yaml file')
         # port
         # ----
-        parser.add_argument('--crashdumps_port',
+        parser.add_argument('--port',
                             action="store",
                             default=None,
                             help = 'Specify upload Port\ndefault uses '
                                    'servers information from yaml file')
         # username
         # --------
-        parser.add_argument('--crashdumps_username',
+        parser.add_argument('--username',
                             action="store",
                             default=None,
                             help = 'Specify upload username credentials')
         # password
         # --------
-        parser.add_argument('--crashdumps_password',
+        parser.add_argument('--password',
                             action="store",
                             default=None,
                             help = 'Specify upload password credentials')
         # destination
         # -----------
-        parser.add_argument('--crashdumps_destination',
+        parser.add_argument('--destination',
                             action="store",
                             default="/",
                             help = "Specify destination folder at remote "
                                    "server\ndefault to '/'")
         # timeout
         # -------
-        parser.add_argument('--crashdumps_timeout',
+        parser.add_argument('--timeout',
                             action="store",
                             default=300,
                             help = "Specify upload timeout value\ndefault "
                                    "to 300 seconds")
         return parser
 
-    def parse_args(self, argv):
-        '''parse_args
 
-        parse arguments if available, store results to self.args. This follows
-        the easypy argument propagation scheme, where any unknown arguments to
-        this plugin is then stored back into sys.argv and untouched.
-
-        Does nothing if a plugin doesn't come with a built-in parser.
-        '''
-
-        # do nothing when there's no parser
-        if not self.parser:
-            return
-
-        argv = copy.copy(argv)
-
-        # avoid parsing unknowns
-        self.args, _ = self.parser.parse_known_args(argv)
-
-    def execution(self, device, **kwargs):
+    def execution(self, device, execution_time):
 
         # Init
         status = OK
@@ -118,23 +94,22 @@ class Plugin(object):
         self.core_list = []
         self.crashreport_list = []
 
-        crash_type = getattr(self.args, 'flash_crash_type', [])
-        
+        timeout = self.args.timeout
+
         # Execute command to check for cores
         status += lookup.libs.utils.check_cores(device, self.core_list,
                                                 crashreport_list=self.crashreport_list,
-                                                timeout=self.args.crashdumps_timeout,
-                                                crash_type=crash_type)
+                                                timeout=timeout)
 
         # User requested upload cores to server
-        if self.args.crashdumps_upload and status == CRITICAL:
-            kwargs = {'protocol': self.args.crashdumps_protocol,
-                      'server': self.args.crashdumps_server,
-                      'port': self.args.crashdumps_port,
-                      'username': self.args.crashdumps_username,
-                      'password': self.args.crashdumps_password,
-                      'destination': self.args.crashdumps_destination,
-                      'timeout': self.args.crashdumps_timeout}
+        if self.args.upload and status == CRITICAL:
+            kwargs = {'protocol': self.args.protocol, 
+                      'server': self.args.server, 
+                      'port': self.args.port, 
+                      'username': self.args.username,
+                      'password': self.args.password, 
+                      'destination': self.args.destination,
+                      'timeout': self.args.timeout}
 
             # Will make sure that manadtory keys exist for uploading to server
             # [protocol, server, destination, username, password]
@@ -167,7 +142,7 @@ class Plugin(object):
                 self.core_list, self.crashreport_list, **kwargs)
 
         # User requested clean up of cores
-        if self.args.crashdumps_clean_up and status == CRITICAL:
+        if self.args.clean_up and status == CRITICAL:
             status += lookup.libs.utils.clear_cores(device, self.core_list,
                 self.crashreport_list)
 

@@ -5,6 +5,10 @@ GenieMonitor Alignment Check Plugin.
 # Python
 import re
 import logging
+import copy
+
+# argparse
+from ats.utils import parser as argparse
 
 # ATS
 from ats.log.utils import banner
@@ -12,14 +16,13 @@ from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
 # GenieMonitor
-from genietelemetry.plugins.bases import BasePlugin
-from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # module logger
 logger = logging.getLogger(__name__)
 
 
-class Plugin(BasePlugin):
+class Plugin(object):
 
     __plugin_name__ = 'Alignment Check Plugin'
 
@@ -30,22 +33,41 @@ class Plugin(BasePlugin):
         
         # timeout
         # -------
-        parser.add_argument('--timeout',
+        parser.add_argument('--alignmentcheck_timeout',
                             action="store",
                             default=300,
                             help='Specify duration (in seconds) to wait before '
                                  'timing out execution of a command')
         return parser
 
+    def parse_args(self, argv):
+        '''parse_args
 
-    def execution(self, device, execution_time):
+        parse arguments if available, store results to self.args. This follows
+        the easypy argument propagation scheme, where any unknown arguments to
+        this plugin is then stored back into sys.argv and untouched.
+
+        Does nothing if a plugin doesn't come with a built-in parser.
+        '''
+
+        # do nothing when there's no parser
+        if not self.parser:
+            return
+
+        argv = copy.copy(argv)
+
+        # avoid parsing unknowns
+        self.args, _ = self.parser.parse_known_args(argv)
+
+
+    def execution(self, device, **kwargs):
 
         # Init
         status = OK
         message = ''
 
         # Execute command to check for tracebacks - timeout set to 5 mins
-        output = device.execute(self.show_cmd, timeout=self.args.timeout)
+        output = device.execute(self.show_cmd, timeout=self.args.alignmentcheck_timeout)
         if not output:
             return ERRORED('No output from {cmd}'.format(cmd=self.show_cmd))
 

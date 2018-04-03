@@ -19,58 +19,58 @@ class Plugin(BasePlugin):
 
         # upload
         # ------
-        parser.add_argument('--upload',
+        parser.add_argument('--crashdumps_upload',
                             action="store",
                             default=False,
                             help='Specify whether upload core dumps')
         # clean_up
         # --------
-        parser.add_argument('--clean_up',
+        parser.add_argument('--crashdumps_clean_up',
                             action="store",
                             default=False,
                             help='Specify whether clear core after upload')
         # protocol
         # --------
-        parser.add_argument('--protocol',
+        parser.add_argument('--crashdumps_protocol',
                             action="store",
                             default=None,
                             help = 'Specify upload protocol\ndefault to TFTP')
         # server
         # ------
-        parser.add_argument('--server',
+        parser.add_argument('--crashdumps_server',
                             action="store",
                             default=None,
                             help = 'Specify upload Server\ndefault uses '
                                    'servers information from yaml file')
         # port
         # ----
-        parser.add_argument('--port',
+        parser.add_argument('--crashdumps_port',
                             action="store",
                             default=None,
                             help = 'Specify upload Port\ndefault uses '
                                    'servers information from yaml file')
         # username
         # --------
-        parser.add_argument('--username',
+        parser.add_argument('--crashdumps_username',
                             action="store",
                             default=None,
                             help = 'Specify upload username credentials')
         # password
         # --------
-        parser.add_argument('--password',
+        parser.add_argument('--crashdumps_password',
                             action="store",
                             default=None,
                             help = 'Specify upload password credentials')
         # destination
         # -----------
-        parser.add_argument('--destination',
+        parser.add_argument('--crashdumps_destination',
                             action="store",
                             default="/",
                             help = "Specify destination folder at remote "
                                    "server\ndefault to '/'")
         # timeout
         # -------
-        parser.add_argument('--timeout',
+        parser.add_argument('--crashdumps_timeout',
                             action="store",
                             default=300,
                             help = "Specify upload timeout value\ndefault "

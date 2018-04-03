@@ -1,9 +1,12 @@
 '''
 GenieMonitor CpuUtilizationCheck Plugin
 '''
-
 # Python
+import copy
 import logging
+
+# argparse
+from argparse import ArgumentParser
 
 # ATS
 from ats.log.utils import banner
@@ -11,8 +14,7 @@ from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
 # GenieMonitor
-from genietelemetry.plugins.bases import BasePlugin
-from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # Genie
 from genie.utils.timeout import Timeout
@@ -21,7 +23,7 @@ from genie.utils.timeout import Timeout
 logger = logging.getLogger(__name__)
 
 
-class Plugin(BasePlugin):
+class Plugin(object):
 
     __plugin_name__ = 'CPU utilization Check Plugin'
 
@@ -32,14 +34,14 @@ class Plugin(BasePlugin):
 
         # timeout
         # -------
-        parser.add_argument('--timeout',
+        parser.add_argument('--cpucheck_timeout',
                             action="store",
                             default=120,
                             help = "Specify poll timeout value\ndefault "
                                    "to 120 seconds")
         # interval
         # -------
-        parser.add_argument('--interval',
+        parser.add_argument('--cpucheck_interval',
                             action="store",
                             default=20,
                             help = "Specify poll interval value\ndefault "
@@ -51,18 +53,36 @@ class Plugin(BasePlugin):
                             default=60,
                             help = "Specify limited 5 minutes percentage of "
                                    "cpu usage\ndefault "
-                                   "to 60 seconds")
+                                   "to 60%")
         return parser
 
+    def parse_args(self, argv):
+        '''parse_args
 
-    def execution(self, device, execution_time):
+        parse arguments if available, store results to self.args. This follows
+        the easypy argument propagation scheme, where any unknown arguments to
+        this plugin is then stored back into sys.argv and untouched.
+
+        Does nothing if a plugin doesn't come with a built-in parser.
+        '''
+
+        # do nothing when there's no parser
+        if not self.parser:
+            return
+
+        argv = copy.copy(argv)
+
+        # avoid parsing unknowns
+        self.args, _ = self.parser.parse_known_args(argv)
+
+    def execution(self, device, **kwargs):
 
         # Init
         status = OK
         
         # create timeout object
-        timeout = Timeout(max_time=int(self.args.timeout),
-                          interval=int(self.args.interval))
+        timeout = Timeout(max_time=int(self.args.cpucheck_timeout),
+                          interval=int(self.args.cpucheck_interval))
 
         # loop status
         loop_stat_ok = True

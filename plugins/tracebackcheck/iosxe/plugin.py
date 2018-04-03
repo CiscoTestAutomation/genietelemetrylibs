@@ -21,7 +21,7 @@ class Plugin(BasePlugin):
         
         # logic_pattern
         # -------------
-        parser.add_argument('--logic_pattern',
+        parser.add_argument('--tracebackcheck_logic_pattern',
                             action="store",
                             default="Or('Traceback', 'SERVICE_CRASHED', 'BADSLOT',\
                                         'out of sync', 'HA_CONFIG_SYNC\-\[1234\]',\
@@ -39,14 +39,14 @@ class Plugin(BasePlugin):
                                  'is to check for Tracebacks.')
         # clean_up
         # --------
-        parser.add_argument('--clean_up',
+        parser.add_argument('--tracebackcheck_clean_up',
                             action="store",
                             default=False,
                             help='Specify whether to clear all warnings and '
                                  'tracebacks after reporting error')
         # timeout
         # -------
-        parser.add_argument('--timeout',
+        parser.add_argument('--tracebackcheck_timeout',
                             action="store",
                             default=300,
                             help='Specify duration (in seconds) to wait before '

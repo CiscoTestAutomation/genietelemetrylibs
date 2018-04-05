@@ -159,8 +159,8 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
                 location=item['location'], core_path=item['core'])
 
             device.filetransfer.copyfile(device=device,
-                                         from_file_url=from_URL,
-                                         to_file_url=to_URL)
+                                         source=from_URL,
+                                         destination=to_URL)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "{} upload operation failed: {}".format(file_type,

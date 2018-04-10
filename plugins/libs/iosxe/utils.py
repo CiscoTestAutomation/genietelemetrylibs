@@ -85,7 +85,7 @@ def check_cores(device, core_list, crashreport_list, timeout):
             if m:
                 crashreport = m.groupdict()['core']
                 meta_info = "Crashinfo report generated:\n'{}'".\
-                    format(core)
+                    format(crashreport)
                 logger.error(banner(meta_info))
                 status += CRITICAL(meta_info)
                 crashreport_info = dict(location = location,

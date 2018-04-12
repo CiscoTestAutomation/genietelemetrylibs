@@ -4,7 +4,7 @@ GenieTelemetry Libraries
 GenieTelemetry Libraries file hierarchy
 ---------------------------------------
 
-.. code-block:: text
+```
   plugins/
   |-- __init__.py
   |-- crashdumps
@@ -30,12 +30,12 @@ GenieTelemetry Libraries file hierarchy
   |   `-- nxos
   |       |-- __init__.py
   |       `-- utils.py
-
+```
 
 Plugin Template:
 ----------------
-``cd $VIRTUAL_ENV/projects/genietelemetry_libs/template``
+`cd $VIRTUAL_ENV/projects/genietelemetry_libs/template`
 
 Plugin Example:
 ---------------
-``cd $VIRTUAL_ENV/projects/genietelemetry_libs/plugins/crashdumps``
+`cd $VIRTUAL_ENV/projects/genietelemetry_libs/plugins/crashdumps`

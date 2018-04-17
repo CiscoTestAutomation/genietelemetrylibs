@@ -80,7 +80,7 @@ class Plugin(BasePlugin):
         # ------
         parser.add_argument('--flash_crash_type',
                             action="store",
-                            default=['crashinfo', 'crashinfo', 'crashinfo',\
+                            default=['crashinfo', 'pxf_crashinfo', 'acecrashdum',\
                                      'vsa_ipsec'],
                             help='Specify list of crash type file checking under flash:')
         return parser

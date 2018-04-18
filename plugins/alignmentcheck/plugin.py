@@ -70,9 +70,6 @@ class Plugin(object):
         try:
             output = device.execute(self.show_cmd,
                                     timeout=self.args.alignmentcheck_timeout)
-        except NotImplementedError as e:
-            status += WARNING(str(e))
-            return status
         except Exception as e:
             status += CRITICAL(str(e))
             return status

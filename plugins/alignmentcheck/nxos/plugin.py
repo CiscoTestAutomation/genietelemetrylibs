@@ -6,4 +6,6 @@ from ..plugin import Plugin as BasePlugin
 
 
 class Plugin(BasePlugin):
-    raise NotImplementedError('NXOS not supported Alignment checking')
+    
+    def parse_args(self, argv):
+        return WARNING('NXOS not supported Alignment Check')

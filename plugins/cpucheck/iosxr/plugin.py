@@ -6,4 +6,6 @@ from ..plugin import Plugin as BasePlugin
 
 
 class Plugin(BasePlugin):
-    raise NotImplementedError('IOSXR not supported CpuUtilizationCheck')
+    
+    def parse_args(self, argv):
+        return WARNING('IOSXR not supported CpuUtilizationCheck')

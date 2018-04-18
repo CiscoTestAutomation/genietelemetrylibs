@@ -6,4 +6,6 @@ from ..plugin import Plugin as BasePlugin
 
 
 class Plugin(BasePlugin):
-    raise NotImplementedError('NXOS not supported CpuUtilizationCheck')
+    
+    def parse_args(self, argv):
+        return WARNING('NXOS not supported CpuUtilizationCheck')

@@ -1,5 +1,5 @@
 '''
-GenieMonitor CpuUtilizationCheck Plugin
+GenieTelemetry CpuUtilizationCheck Plugin
 '''
 # Python
 import copy
@@ -13,7 +13,7 @@ from ats.log.utils import banner
 from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
-# GenieMonitor
+# genie.telemetry
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # Genie
@@ -48,7 +48,7 @@ class Plugin(object):
                                    "to 20 seconds")
         # five_min_percentage
         # -------------------
-        parser.add_argument('--five_min_percentage',
+        parser.add_argument('--cpucheck_fivemin_pct',
                             action="store",
                             default=60,
                             help = "Specify limited 5 minutes percentage of "
@@ -98,18 +98,18 @@ class Plugin(object):
             except Exception as e:
                 return ERRORED('No output from show processes cpu\n{}'.format(e))
 
-            # Check 5 minutes percentage smaller than five_min_percentage
-            if int(cpu_dict['five_min_cpu']) >= int(self.args.five_min_percentage):
-                message = "****** Device {d}*****\n".format(d=device.name)
+            # Check 5 minutes percentage smaller than cpucheck_fivemin_pct
+            if int(cpu_dict['five_min_cpu']) >= int(self.args.cpucheck_fivemin_pct):
+                message = "****** Device {d} *****\n".format(d=device.name)
                 message += "Excessive CPU utilization detected for 5 min interval\n"
-                message += "Allowed: {e}%\n".format(e=self.args.five_min_percentage)
+                message += "Allowed: {e}%\n".format(e=self.args.cpucheck_fivemin_pct)
                 message += "Measured: FiveMin: {r}%".format(r=cpu_dict['five_min_cpu'])
                 loop_stat_ok = False
                 timeout.sleep()
             else:
                 message = "***** CPU usage is Expected ***** \n"
                 message += "Allowed threashold: {e} \n"\
-                                .format(e=self.args.five_min_percentage)
+                                .format(e=self.args.cpucheck_fivemin_pct)
                 message += "Measured from device: {r}"\
                                 .format(r=cpu_dict['five_min_cpu'])
                 loop_stat_ok = True

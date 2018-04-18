@@ -1,11 +1,9 @@
 ''' 
-GenieTelemetry Crashdumps Plugin for NXOS
+GenieTelemetry CpuUtilizationCheck Plugin for NXOS
 '''
 
-# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
 
 
 class Plugin(BasePlugin):
-
-    pass
+    raise NotImplementedError('NXOS not supported CpuUtilizationCheck')

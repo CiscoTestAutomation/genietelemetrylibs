@@ -1,5 +1,5 @@
 '''
-GenieMonitor Alignment Check Plugin.
+GenieTelemetry Alignment Check Plugin.
 '''
 
 # Python
@@ -15,7 +15,7 @@ from ats.log.utils import banner
 from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
-# GenieMonitor
+# genie.telemetry
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # module logger
@@ -67,7 +67,16 @@ class Plugin(object):
         message = ''
 
         # Execute command to check for tracebacks - timeout set to 5 mins
-        output = device.execute(self.show_cmd, timeout=self.args.alignmentcheck_timeout)
+        try:
+            output = device.execute(self.show_cmd,
+                                    timeout=self.args.alignmentcheck_timeout)
+        except NotImplementedError as e:
+            status += WARNING(str(e))
+            return status
+        except Exception as e:
+            status += CRITICAL(str(e))
+            return status
+            
         if not output:
             return ERRORED('No output from {cmd}'.format(cmd=self.show_cmd))
 

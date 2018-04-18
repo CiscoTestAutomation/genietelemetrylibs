@@ -118,7 +118,7 @@ class Plugin(object):
         self.core_list = []
         self.crashreport_list = []
 
-        crash_type = getattr(self.args, 'flash_crash_type', [])
+        crash_type = getattr(self.args, 'crashdumps_flash_crash_file', [])
         
         # Execute command to check for cores
         status += lookup.libs.utils.check_cores(device, self.core_list,

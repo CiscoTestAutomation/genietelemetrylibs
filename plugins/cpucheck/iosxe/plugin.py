@@ -1,8 +1,7 @@
 ''' 
-GenieTelemetry Crashdumps Plugin for IOSXE
+GenieTelemetry CpuUtilizationCheck Plugin for IOSXE
 '''
 
-# GenieTelemetry
 from ..plugin import Plugin as BasePlugin
 
 # parser

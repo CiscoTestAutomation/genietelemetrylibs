@@ -1,11 +1,9 @@
 ''' 
-GenieMonitor Alignment Check Plugin for IOSXR.
+GenieTelemetry Alignment Check Plugin for IOSXR.
 '''
 
-# GenieMonitor
 from ..plugin import Plugin as BasePlugin
 
 
 class Plugin(BasePlugin):
-
-    pass
+    raise NotImplementedError('IOSXR not supported Alignment checking')

@@ -15,7 +15,7 @@ class Plugin(BasePlugin):
     # Similar idea when 'execution_datetime' is specified as a function
     # argument, the plugin execution datetime is provided as input to this
     # action method.
-    def execution(self, device, execution_datetime):
+    def execution(self, device):
 
         # Plugin parser results are always stored as 'self.args'
         if self.args.print_timestamp:

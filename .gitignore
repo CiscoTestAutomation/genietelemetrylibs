@@ -29,6 +29,7 @@ __pycache__/
 # build folder
 __build__/
 build/
+dist/
 
 # Artifacts caused by "make develop"
 *.egg-info

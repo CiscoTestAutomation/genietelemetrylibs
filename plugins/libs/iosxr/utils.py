@@ -7,7 +7,7 @@ import logging
 from ats.log.utils import banner
 
 # GenieMonitor
-from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # abstract
 from abstract import Lookup
@@ -15,9 +15,8 @@ from abstract import Lookup
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog
 
-# TFTPUtils
-import filetransferutils
-from filetransferutils.ssh import Ssh
+# Import FileUtils core utilities
+from ats.utils.fileutils import FileUtils
 
 # module logger
 logger = logging.getLogger(__name__)
@@ -58,8 +57,7 @@ def check_cores(device, core_list, **kwargs):
                     re.search(pattern2, line, re.IGNORECASE)
             if match:
                 core = match.groupdict()['core']
-                meta_info = "Core dump generated:\n'{}' on device {}".format(
-                    core, device.name)
+                meta_info = "Core dump generated:\n'{}'".format(core)
                 logger.error(banner(meta_info))
                 status += CRITICAL(meta_info)
                 core_info = dict(location = location,
@@ -67,8 +65,7 @@ def check_cores(device, core_list, **kwargs):
                 core_list.append(core_info)
 
         if not core_list:
-            meta_info = "No cores found at location: {} on device {}".format(
-                location, device.name)
+            meta_info = "No cores found at location: {}".format(location)
             logger.info(banner(meta_info))
             status += OK(meta_info)
 
@@ -95,15 +92,6 @@ def upload_to_server(device, core_list, *args, **kwargs):
             meta_info = "Unable to upload core dump - parameters not provided"
             return ERRORED(meta_info)
 
-    # Got a tftp, set it up
-    # Get the information needed
-    scp = Ssh(ip=server)
-    scp.setup_scp()
-
-    # Get the corresponding filetransferutils Utils implementation
-    tftpcls = Lookup(device.os).filetransferutils.tftp.utils.Utils(
-        scp, kwargs['destination'])
-
     # Upload each core found
     for item in core_list:
 
@@ -111,10 +99,22 @@ def upload_to_server(device, core_list, *args, **kwargs):
             item['location'], destination, server)
 
         try:
-            tftpcls.copy_core(device, item['location'], item['core'],
-                                       server=server, destination=destination,
-                                       port=port, timeout=timeout,
-                                       username=username, password=password)
+            # Check if filetransfer has been added to device before or not
+            if not hasattr(device, 'filetransfer'):
+                device.filetransfer = FileUtils.from_device(device)
+
+            to_URL = '{protocol}://{address}/{path}/{filename}'.format(
+                protocol=protocol,
+                address=server,
+                path=destination,
+                filename=item['core'])
+
+            from_URL = '{location}//{core_path}'.format(
+                location=item['location'], core_path=item['core'])
+
+            device.filetransfer.copyfile(device=device,
+                                         source=from_URL,
+                                         destination=to_URL)
         except Exception as e:
             if 'Tftp operation failed' in e:
                 meta_info = "Core dump upload operation failed: {}".format(
@@ -165,3 +165,17 @@ def clear_cores(device, core_list, crashreport_list, **kwargs):
                         core=item['core'],location=item['location'])
             logger.error(banner(meta_info))
             return ERRORED(meta_info)
+
+def check_tracebacks(device, timeout, **kwargs):
+
+    # Execute command to check for tracebacks
+    output = device.execute('show logging', timeout=timeout)
+
+    return output
+
+def clear_tracebacks(device, timeout, **kwargs):
+
+    # Execute command to clear tracebacks
+    output = device.execute('clear logging', timeout=timeout)
+
+    return output

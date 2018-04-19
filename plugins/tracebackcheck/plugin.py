@@ -1,26 +1,32 @@
 '''
-GenieMonitor Traceback Check Plugin.
+GenieTelemetry Traceback Check Plugin.
 '''
 
 # Python
 import re
 import logging
+import copy
+
+# argparse
+from ats.utils import parser as argparse
 
 # ATS
 from ats.log.utils import banner
-from ats.utils import parser as argparse
-from ats.datastructures import classproperty
 from ats.datastructures.logic import logic_str
+from ats.datastructures import classproperty
 
-# GenieMonitor
-from genietelemetry.plugins.bases import BasePlugin
-from genietelemetry.results import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+# GenieTelemetry
+from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
+from genietelemetry_libs.plugins import libs
+
+# Abstract
+from abstract import Lookup
 
 # module logger
 logger = logging.getLogger(__name__)
 
 
-class Plugin(BasePlugin):
+class Plugin(object):
 
     __plugin_name__ = 'Traceback Check Plugin'
 
@@ -28,10 +34,10 @@ class Plugin(BasePlugin):
     def parser(cls):
         parser = argparse.ArgsPropagationParser(add_help = False)
         parser.title = 'Traceback Check'
-        
+
         # logic_pattern
         # -------------
-        parser.add_argument('--logic_pattern',
+        parser.add_argument('--tracebackcheck_logic_pattern',
                             action="store",
                             default="And('Traceback')",
                             help='Specify logical expression for patterns to '
@@ -40,34 +46,55 @@ class Plugin(BasePlugin):
                                  'is to check for Tracebacks.')
         # clean_up
         # --------
-        parser.add_argument('--clean_up',
+        parser.add_argument('--tracebackcheck_clean_up',
                             action="store",
                             default=False,
                             help='Specify whether to clear all warnings and '
                                  'tracebacks after reporting error')
         # timeout
         # -------
-        parser.add_argument('--timeout',
+        parser.add_argument('--tracebackcheck_timeout',
                             action="store",
                             default=300,
                             help='Specify duration (in seconds) to wait before '
                                  'timing out execution of a command')
         return parser
 
+    def parse_args(self, argv):
+        '''parse_args
 
-    def execution(self, device, execution_time):
+        parse arguments if available, store results to self.args. This follows
+        the easypy argument propagation scheme, where any unknown arguments to
+        this plugin is then stored back into sys.argv and untouched.
+
+        Does nothing if a plugin doesn't come with a built-in parser.
+        '''
+
+        # do nothing when there's no parser
+        if not self.parser:
+            return
+
+        argv = copy.copy(argv)
+
+        # avoid parsing unknowns
+        self.args, _ = self.parser.parse_known_args(argv)
+
+    def execution(self, device, **kwargs):
 
         # Init
         status = OK
         matched_lines_dict = {}
 
+        lookup = Lookup.from_device(device)
+
         # Execute command to check for tracebacks - timeout set to 5 mins
-        output = device.execute(self.show_cmd, timeout=self.args.timeout)
+        output = lookup.libs.utils.check_tracebacks(device,
+            timeout=self.args.tracebackcheck_timeout)
         if not output:
             return ERRORED('No output from {cmd}'.format(cmd=self.show_cmd))
 
         # Logic pattern
-        match_patterns = logic_str(self.args.logic_pattern)
+        match_patterns = logic_str(self.args.tracebackcheck_logic_pattern)
 
         # Parse 'show logging logfile' output for keywords
         matched_lines_dict['matched_lines'] = []
@@ -86,9 +113,10 @@ class Plugin(BasePlugin):
             logger.info(banner(message))
 
         # Clear logging (if user specified)
-        if self.args.clean_up:
+        if self.args.tracebackcheck_clean_up:
             try:
-                device.execute(self.clear_cmd)
+                output = lookup.libs.utils.clear_tracebacks(device,
+                    timeout=timeout)
                 message = "Successfully cleared logging"
                 status += OK(message)
                 logger.info(banner(message))

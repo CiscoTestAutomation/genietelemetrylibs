@@ -4,7 +4,7 @@ GenieTelemetry HelloWorld Plugin for IOSXE.
 
 # GenieTelemetry
 from ..plugin import Plugin as BasePlugin
-from genietelemetry.results import OK, ERRORED
+from genie.telemetry.status import OK, ERRORED
 
 
 class Plugin(BasePlugin):

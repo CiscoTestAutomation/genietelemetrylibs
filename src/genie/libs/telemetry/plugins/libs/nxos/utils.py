@@ -11,10 +11,10 @@ from ats.log.utils import banner
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # Parsergen
-from parsergen import oper_fill_tabular
+from genie.parsergen import oper_fill_tabular
 
 # abstract
-from abstract import Lookup
+from genie.abstract import Lookup
 
 # Import FileUtils core utilities
 from ats.utils.fileutils import FileUtils

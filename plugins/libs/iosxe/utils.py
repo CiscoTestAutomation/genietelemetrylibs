@@ -101,6 +101,7 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
                 crashreport_list.append(crashreport_info)
                 continue
 
+            # find user defined crashed files other than crashinfo
             pattern = location.split(':')[1]
             if pattern and '/' not in pattern:
                 m = re.compile(r'{}'.format(pattern)).match(line)

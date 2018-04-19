@@ -11,9 +11,6 @@ from ..plugin import Plugin as BasePlugin
 
 class Plugin(BasePlugin):
 
-
-class Plugin(object):
-
     __plugin_name__ = 'Crash Dumps Plugin'
 
     @classproperty

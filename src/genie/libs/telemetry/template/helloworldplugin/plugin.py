@@ -14,7 +14,7 @@ from ats.datastructures import classproperty
 # GenieMonitor
 from genie.telemetry.plugin import BasePlugin
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
-from genietelemetry_libs.plugins import libs
+from genie.libs.telemetry.plugins import libs
 
 logger = logging.getLogger(__name__)
 

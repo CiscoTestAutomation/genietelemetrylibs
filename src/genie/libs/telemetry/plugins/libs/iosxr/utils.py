@@ -10,7 +10,7 @@ from ats.log.utils import banner
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # abstract
-from abstract import Lookup
+from genie.abstract import Lookup
 
 # Unicon
 from unicon.eal.dialogs import Statement, Dialog

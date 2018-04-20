@@ -20,7 +20,7 @@ from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 from genietelemetry_libs.plugins import libs
 
 # Abstract
-from abstract import Lookup
+from genie.abstract import Lookup
 
 # module logger
 logger = logging.getLogger(__name__)

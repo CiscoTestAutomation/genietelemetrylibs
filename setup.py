@@ -77,7 +77,7 @@ setup(
     keywords = 'genie pyats telemetry test automation',
 
     # uses namespace package
-    namespace_packages = ['genie.libs'],
+    namespace_packages = ['genie', 'genie.libs'],
 
     # project packages
     packages = find_packages(where = 'src'),

@@ -116,7 +116,7 @@ class Plugin(object):
         if self.args.tracebackcheck_clean_up:
             try:
                 output = lookup.libs.utils.clear_tracebacks(device,
-                    timeout=timeout)
+                    timeout=self.args.tracebackcheck_timeout)
                 message = "Successfully cleared logging"
                 status += OK(message)
                 logger.info(banner(message))

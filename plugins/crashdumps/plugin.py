@@ -87,6 +87,12 @@ class Plugin(object):
                             default=300,
                             help = "Specify upload timeout value\ndefault "
                                    "to 300 seconds")
+        # flash_crash_file
+        # ----------------
+        parser.add_argument('--crashdumps_flash_crash_file',
+                            action="store",
+                            default=None,
+                            help='Specify list of crash type file checking under flash:')
         return parser
 
     def parse_args(self, argv):

@@ -1,8 +1,7 @@
 ''' 
-GenieMonitor Traceback Check Plugin for NXOS.
+GenieTelemetry Traceback Check Plugin for NXOS.
 '''
 
-# GenieMonitor
 from ..plugin import Plugin as BasePlugin
 
 

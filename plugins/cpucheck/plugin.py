@@ -39,21 +39,20 @@ class Plugin(object):
                             default=120,
                             help = "Specify poll timeout value\ndefault "
                                    "to 120 seconds")
-        # interval
-        # -------
+        # # interval
+        # # -------
         parser.add_argument('--cpucheck_interval',
                             action="store",
                             default=20,
                             help = "Specify poll interval value\ndefault "
                                    "to 20 seconds")
-        # five_min_percentage
-        # -------------------
-        parser.add_argument('--cpucheck_fivemin_pct',
+        # # five_min_percentage
+        # # -------------------
+        parser.add_argument('--cpucheck_fivemin_pcnt',
                             action="store",
                             default=60,
                             help = "Specify limited 5 minutes percentage of "
-                                   "cpu usage\ndefault "
-                                   "to 60%")
+                                   "cpu usage\ndefault to 60")
         return parser
 
     def parse_args(self, argv):
@@ -98,18 +97,18 @@ class Plugin(object):
             except Exception as e:
                 return ERRORED('No output from show processes cpu\n{}'.format(e))
 
-            # Check 5 minutes percentage smaller than cpucheck_fivemin_pct
-            if int(cpu_dict['five_min_cpu']) >= int(self.args.cpucheck_fivemin_pct):
+            # Check 5 minutes percentage smaller than cpucheck_fivemin_pcnt
+            if int(cpu_dict['five_min_cpu']) >= int(self.args.cpucheck_fivemin_pcnt):
                 message = "****** Device {d} *****\n".format(d=device.name)
                 message += "Excessive CPU utilization detected for 5 min interval\n"
-                message += "Allowed: {e}%\n".format(e=self.args.cpucheck_fivemin_pct)
+                message += "Allowed: {e}%\n".format(e=self.args.cpucheck_fivemin_pcnt)
                 message += "Measured: FiveMin: {r}%".format(r=cpu_dict['five_min_cpu'])
                 loop_stat_ok = False
                 timeout.sleep()
             else:
                 message = "***** CPU usage is Expected ***** \n"
                 message += "Allowed threashold: {e} \n"\
-                                .format(e=self.args.cpucheck_fivemin_pct)
+                                .format(e=self.args.cpucheck_fivemin_pcnt)
                 message += "Measured from device: {r}"\
                                 .format(r=cpu_dict['five_min_cpu'])
                 loop_stat_ok = True

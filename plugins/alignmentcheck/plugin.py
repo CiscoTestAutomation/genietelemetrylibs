@@ -36,8 +36,8 @@ class Plugin(object):
         parser.add_argument('--alignmentcheck_timeout',
                             action="store",
                             default=300,
-                            help='Specify duration (in seconds) to wait before '
-                                 'timing out execution of a command')
+                            help="Specify duration <in seconds> to wait before "
+                                 "timing out execution of a command")
         return parser
 
     def parse_args(self, argv):

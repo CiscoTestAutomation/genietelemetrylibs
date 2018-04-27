@@ -4,6 +4,10 @@
 __pycache__/
 *.log
 
+# Cython files
+*.c
+*.so
+
 # Developer files
 .project
 .pydevproject
@@ -29,7 +33,6 @@ __pycache__/
 # build folder
 __build__/
 build/
-dist/
 
 # Artifacts caused by "make develop"
 *.egg-info
@@ -40,6 +43,13 @@ htmlcov/
 
 # filesystem stuff on Mac
 .DS_Store
+
+# unicon log file
+uni.log
+
+# Extra files placed by cisco_shared into examples
+*dyntopo/src/dyntopo/laas/examples/dyntopo_laas
+*dyntopo/src/dyntopo/xrut/examples/dyntopo_xrut
 
 # Files resulting from a git meld merge
 *.orig

@@ -3,9 +3,9 @@ GenieTelemetry Alignment Check Plugin for IOSXR.
 '''
 
 from ..plugin import Plugin as BasePlugin
+from genie.telemetry.status import WARNING
 
 
-class Plugin(BasePlugin):
-    
-    def parse_args(self, argv):
-        return WARNING('IOSXR not supported Alignment Check')
+class Plugin(BasePlugin): 
+    def execution(self, device, **kwargs):  
+	    return WARNING('IOSXR not supported Alignment Check')

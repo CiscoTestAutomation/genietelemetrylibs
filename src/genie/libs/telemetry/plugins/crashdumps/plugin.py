@@ -87,6 +87,12 @@ class Plugin(object):
                             default=300,
                             help = "Specify upload timeout value\ndefault "
                                    "to 300 seconds")
+        # flash_crash_file
+        # ----------------
+        parser.add_argument('--crashdumps_flash_crash_file',
+                            action="store",
+                            default=None,
+                            help='Specify list of crash type file checking under flash:')
         return parser
 
     def parse_args(self, argv):
@@ -118,10 +124,13 @@ class Plugin(object):
         self.core_list = []
         self.crashreport_list = []
 
+        crash_type = getattr(self.args, 'crashdumps_flash_crash_file', [])
+        
         # Execute command to check for cores
         status += lookup.libs.utils.check_cores(device, self.core_list,
                                                 crashreport_list=self.crashreport_list,
-                                                timeout=self.args.crashdumps_timeout)
+                                                timeout=self.args.crashdumps_timeout,
+                                                crash_type=crash_type)
 
         # User requested upload cores to server
         if self.args.crashdumps_upload and status == CRITICAL:

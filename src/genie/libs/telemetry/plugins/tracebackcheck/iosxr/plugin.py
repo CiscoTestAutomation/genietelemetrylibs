@@ -1,8 +1,7 @@
 ''' 
-GenieMonitor Traceback Check Plugin for IOSXR.
+GenieTelemetry Traceback Check Plugin for IOSXR.
 '''
 
-# GenieMonitor
 from ..plugin import Plugin as BasePlugin
 
 

@@ -1,4 +1,4 @@
-Genie Libs Telemetry Component
+Genie Telemetry libs Component
 ==============================
 
 Genie Telemetry is a testbed Health Status Monitoring Tool. It is a package
@@ -19,11 +19,11 @@ home page at
 .. _Cisco DevNet: https://developer.cisco.com/
 
 
-Parser Package
-------------
+Genie Telemetry libs
+--------------------
 
-This is a sub-component of Genie that parse the device output into structure
-datastructure.
+Genie Telemetry is a testbed health status monitoring tool, this package
+contains the libraries.
 
 Requirements
 ------------
@@ -36,11 +36,8 @@ Quick Start
 
 .. code-block:: console
  
-    # install pyats as a whole
-    $ pip install pyats
-
-    # install genie as a whole
-    $ pip install genie
+    # install genie.telemetry
+    $ pip install genie.telemetry
 
     # to upgrade this package manually
     $ pip install --upgrade genie.libs.telemetry

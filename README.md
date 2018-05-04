@@ -41,4 +41,4 @@ $ pip install genie.telemetry
 
 Detailed build guide can be found [here].
 
-[here]: https://github.com/CiscoTestAutomation/genietelemetrylibs/blob/master/BUILD.md
+[here]: (BUILD.md)

@@ -17,8 +17,15 @@ contains the libraries.
 
 [Cisco Devnet]: https://developer.cisco.com/
 
-This package contains the librairies for Configuring, retrieving and
-Genie.Harness.
+GenieTelemetryLibs is the library location for genie.telemetry package containing
+all the user developed plugins deriving the telemetry behavior during the run.
+
+Multiple plugins have been already developed,
+
+* crashdumps
+* tracebackcheck
+* alignmentcheck
+* cpucheck
 
 # Installation
 
@@ -29,3 +36,9 @@ Detailed installation guide can be found on [our website].
 ```
 $ pip install genie.telemetry
 ```
+
+# Building Plugins Guidelines
+
+Detailed build guide can be found [here].
+
+[here]: (BUILD.md)

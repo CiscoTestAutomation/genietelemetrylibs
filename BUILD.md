@@ -6,9 +6,9 @@ To develop a new plugin,
 activate __develop__ mode to contribute.
 
 ```
->>> git clone <git_repo>
->>> cd genietelemetrylibs/
->>> make develop
+  >>> git clone <git_repo>
+  >>> cd genietelemetrylibs/
+  >>> make develop
 ```
 
 * Create a new plugin folder under genietelemetrylibs/src/genie/libs/telemetry/plugins/<mynewplugin> following the structure shown below:

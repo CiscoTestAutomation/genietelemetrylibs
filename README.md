@@ -39,4 +39,4 @@ $ pip install genie.telemetry
 
 # Building Plugins Guidelines
 
-Detailed build guide can be found in the [Plugins build guidelines][BUILD.md].
+Detailed build guide can be found in the [Plugins build guidelines](BUILD.md).

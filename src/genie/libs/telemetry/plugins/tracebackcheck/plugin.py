@@ -48,7 +48,7 @@ class Plugin(object):
         # --------
         parser.add_argument('--tracebackcheck_clean_up',
                             action="store",
-                            default=False,
+                            default=True,
                             help='Specify whether to clear all warnings and '
                                  'tracebacks after reporting error')
         # timeout

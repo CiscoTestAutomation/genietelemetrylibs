@@ -39,7 +39,7 @@ class Plugin(object):
         # --------
         parser.add_argument('--crashdumps_clean_up',
                             action="store",
-                            default=False,
+                            default=True,
                             help='Specify whether clear core after upload')
         # protocol
         # --------

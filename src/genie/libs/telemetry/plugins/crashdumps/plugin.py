@@ -13,6 +13,7 @@ from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
 # GenieTelemetry
+from genie.telemetry.plugin import BasePlugin
 from genie.telemetry.status import OK, CRITICAL
 from genie.libs.telemetry.plugins import libs
 
@@ -20,7 +21,7 @@ from genie.libs.telemetry.plugins import libs
 from genie.abstract import Lookup
 
 
-class Plugin(object):
+class Plugin(BasePlugin):
 
     __plugin_name__ = 'Crash Dumps Plugin'
 

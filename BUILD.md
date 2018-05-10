@@ -5,10 +5,10 @@ To develop a new plugin,
 * Clone genietelemetrylibs repo under your pyAts environment then
 activate __develop__ mode to contribute.
 
-```
-  >>> git clone <git_repo>
-  >>> cd genietelemetrylibs/
-  >>> make develop
+```bash
+  git clone <git_repo>
+  cd genietelemetrylibs/
+  make develop
 ```
 
 * Create a new plugin folder under genietelemetrylibs/src/genie/libs/telemetry/plugins/<mynewplugin> following the structure shown below:

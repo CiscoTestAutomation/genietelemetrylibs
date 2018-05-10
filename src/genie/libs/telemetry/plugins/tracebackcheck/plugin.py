@@ -16,6 +16,7 @@ from ats.datastructures.logic import logic_str
 from ats.datastructures import classproperty
 
 # GenieTelemetry
+from genie.telemetry.plugin import BasePlugin
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 from genie.libs.telemetry.plugins import libs
 
@@ -26,7 +27,7 @@ from genie.abstract import Lookup
 logger = logging.getLogger(__name__)
 
 
-class Plugin(object):
+class Plugin(BasePlugin):
 
     __plugin_name__ = 'Traceback Check Plugin'
 
@@ -48,7 +49,7 @@ class Plugin(object):
         # --------
         parser.add_argument('--tracebackcheck_clean_up',
                             action="store",
-                            default=False,
+                            default=True,
                             help='Specify whether to clear all warnings and '
                                  'tracebacks after reporting error')
         # timeout

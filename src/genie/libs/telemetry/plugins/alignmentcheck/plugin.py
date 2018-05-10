@@ -15,14 +15,15 @@ from ats.log.utils import banner
 from ats.utils import parser as argparse
 from ats.datastructures import classproperty
 
-# genie.telemetry
+# GenieTelemetry
+from genie.telemetry.plugin import BasePlugin
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
 # module logger
 logger = logging.getLogger(__name__)
 
 
-class Plugin(object):
+class Plugin(BasePlugin):
 
     __plugin_name__ = 'Alignment Check Plugin'
 

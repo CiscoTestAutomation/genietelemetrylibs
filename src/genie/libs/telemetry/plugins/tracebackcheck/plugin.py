@@ -79,7 +79,6 @@ class Plugin(BasePlugin):
 
         # avoid parsing unknowns
         self.args, _ = self.parser.parse_known_args(argv)
-        import pdb ; pdb.set_trace()
 
     def execution(self, device, **kwargs):
 

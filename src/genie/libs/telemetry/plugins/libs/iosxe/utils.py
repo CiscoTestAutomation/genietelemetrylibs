@@ -23,7 +23,7 @@ from unicon.eal.utils import expect_log
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
+def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
 
     # Init
     status = OK

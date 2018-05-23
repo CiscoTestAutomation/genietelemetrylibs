@@ -23,7 +23,7 @@ from unicon.eal.utils import expect_log
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
+def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
 
     # Init
     status = OK
@@ -47,8 +47,9 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
     locations = ['flash:/core', 'bootflash:/core', 'harddisk:/core', 'crashinfo:']
 
     # if provided 
-    for crash_string in crash_type:
-        locations.append('flash:{}*'.format(crash_string))
+    if crash_type:
+        for crash_string in crash_type.split(','):
+            locations.append('flash:{}*'.format(crash_string)) if crash_string else None
 
     # Execute command to check for cores and crashinfo reports
     for location in locations:

@@ -61,5 +61,4 @@ bash$ make develop
 ```
 
 Now you should be able to develop the files and see it reflected in your runs.
-```
 

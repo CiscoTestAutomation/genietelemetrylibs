@@ -82,9 +82,11 @@ def upload_to_server(device, core_list, *args, **kwargs):
     password = kwargs['password']
 
     # Check values are not None
-    for item in [protocol, server, destination, username, password]:
-        if item is None:
-            meta_info = "Unable to upload core dump - parameters not provided"
+    for item in kwargs:
+        if item not in ['protocol', 'server', 'destination', 'username', 'password']:
+            continue
+        if kwargs[item] is None:
+            meta_info = "Unable to upload core dump - parameters {} not provided".format(item)
             return ERRORED(meta_info)
 
     # Upload each core found

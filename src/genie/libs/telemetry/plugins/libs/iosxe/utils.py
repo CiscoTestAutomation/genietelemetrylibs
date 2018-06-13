@@ -148,9 +148,8 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
 
     # Check values are not None
     for item in kwargs:
-        if item not in ['protocol', 'server', 'destination', 'username', 'password']:
-            continue
-        if kwargs[item] is None:
+        if item in ['protocol', 'server', 'destination', 'username', 'password'] and \
+           kwargs[item] is None:
             meta_info = "Unable to upload core dump - parameters `{}` not provided."\
                         " Required parameters are: `protocol`, `server`, "\
                         "`destination`, `username`, `password`".format(item)

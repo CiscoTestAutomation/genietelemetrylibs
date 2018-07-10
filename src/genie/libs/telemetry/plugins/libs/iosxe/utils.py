@@ -49,7 +49,7 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
     # if provided 
     if crash_type:
         for crash_string in crash_type.split(','):
-            locations.append('flash:{}*'.format(crash_string)) if crash_string else None
+            locations.append('flash:{}*'.format(crash_string.strip())) if crash_string else None
 
     # Execute command to check for cores and crashinfo reports
     for location in locations:
@@ -147,9 +147,12 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
     password = kwargs['password']
 
     # Check values are not None
-    for item in [protocol, server, destination, username, password]:
-        if item is None:
-            meta_info = "Unable to upload core dump - parameters not provided"
+    for item in kwargs:
+        if item in ['protocol', 'server', 'destination', 'username', 'password'] and \
+           kwargs[item] is None:
+            meta_info = "Unable to upload core dump - parameters `{}` not provided."\
+                        " Required parameters are: `protocol`, `server`, "\
+                        "`destination`, `username`, `password`".format(item)
             return ERRORED(meta_info)
 
     # preparing the full list to iterate over

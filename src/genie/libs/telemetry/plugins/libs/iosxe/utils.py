@@ -30,8 +30,8 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
 
     # Construct the core pattern to be parsed later
     # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
-    # 7763  -rw-        107847329   Jul 5 2018 12:53:55 +00:00  kernel.rp_RP-EDISON_0_20180705125020.core.flat.gz
-    # 7761  -rw-            36003   Jul 5 2018 12:50:20 +00:00  kernel.rp_RP-EDISON_0_20180705125020.txt
+    # 7763     -rw-        107847329   Jul 5 2018 12:53:55 +00:00  kernel.rp_RP-EDISON_0_20180705125020.core.flat.gz
+    # 7761     -rw-            36003   Jul 5 2018 12:50:20 +00:00  kernel.rp_RP-EDISON_0_20180705125020.txt
     core_pattern = re.compile(r'(?P<number>\d+) '
         '+(?P<permissions>[rw\-]+) +(?P<filesize>\d+) '
         '+(?P<month>\w+) +(?P<date>\d+) +(?P<year>\d+) '

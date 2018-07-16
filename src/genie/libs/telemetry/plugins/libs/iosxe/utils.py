@@ -35,7 +35,7 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
     core_pattern = re.compile(r'(?P<number>\d+) '
         '+(?P<permissions>[rw\-]+) +(?P<filesize>\d+) '
         '+(?P<month>\w+) +(?P<date>\d+) +(?P<year>\d+) '
-        '+(?P<time>[\w\:]+) +(?P<timezone>(\S+)) +(?P<core>((.*core\.gz)|(.*core\.flat\.gz)|(.*\.txt)))$', re.IGNORECASE)
+        '+(?P<time>[\w\:]+) +(?P<timezone>(\S+)) +(?P<core>((.*\.core\.gz)|(.*\.core\.flat\.gz)|(.*\.txt)))$', re.IGNORECASE)
 
     # Construct the crashreport pattern to be parsed later
     # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC

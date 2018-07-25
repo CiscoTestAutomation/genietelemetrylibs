@@ -47,7 +47,8 @@ class Plugin(BasePlugin):
                             action="store",
                             required = True,
                             default=None,
-                            help = 'destination URL to copy cflow result to')
+                            help = 'destination URL to copy cflow result to.'
+                                   'example: tftp:/10.1.0.111/temp/')
 
 
         # cflowcollector_verbose
@@ -91,6 +92,45 @@ class Plugin(BasePlugin):
         # Init
         status = OK
 
+        # check cflow dest values
+        parsed = urlparse(self.args.cflowcollector_dest)
+
+        try:
+            assert parsed.scheme == 'tftp'
+        except AssertionError as e:
+            log.error(banner(str(e)))
+            status += ERRORED(str(e))
+            return status
+
+        try:
+            assert parsed.path != ''
+        except AssertionError as e:
+            log.error(banner(str(e)))
+            status += ERRORED(str(e))
+            return status
+
+        try:
+            assert self.args.cflowcollector_dest.endswith('/')
+        except AssertionError as e:
+            log.error(banner(str(e)))
+            status += ERRORED(str(e))
+            return status
+        
+        # get server address
+        server = parsed.netloc
+
+        # get tftp server from testbed yaml
+        tb = device.testbed
+
+        # cflow package currently only supports tftp
+        tftp = tb.servers.get('tftp', {}).get('address', {})
+
+        # if provided server is not same as tb yaml, use yaml one
+        if tftp and tftp not in server:
+            logger.info('Provided tftp is %s, not same as the one in testbed yaml. '
+                        'Will use testbed yaml server %s' % (server, tftp))
+            server = tftp
+
         # create cflow object for clear and collect
         collector = CflowCollector(devices=[device], verbose=self.args.cflowcollector_verbose)
 
@@ -98,15 +138,28 @@ class Plugin(BasePlugin):
             logger.info('clear process on device %s at the beginning' % device.name)
             collector.clear()
 
+        # collect data
         logger.info('copy process on device %s' % device.name)
-        collector.collect()
+        try:
+            collector.collect()
+        except Exception as e:
+            status += WARNING('Cannot collect data from device %s \n %s' % (device.name, str(e)))
+            return status
 
         logger.info('export data to %s on device %s' % (self.args.cflowcollector_dest,device.name))
-        parsed = urlparse(self.args.cflowcollector_dest)
-        ret = collector.export(dest=self.args.cflowcollector_dest, server=parsed.netloc)
+        try:        
+            ret = collector.export(dest=self.args.cflowcollector_dest, server=parsed.netloc)
+            assert ret
+        except AssertionError as e:
+            status += WARNING('There is no files are successfully exported from device %s' % device.name)
+            return status
+        except Exception as e:
+            status += WARNING(str(e))
+            return status
 
         # update status
-        files = [os.path.join(parsed.path,f) for f in ret[0]]
+        files = [os.path.join(parsed.path, f) for f in ret[0]]
+
         message = 'device %s cflow data exported to %s' % (device.name, files)
         status += OK(message)
         logger.info(banner(message))

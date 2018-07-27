@@ -41,9 +41,9 @@ class Plugin(BasePlugin):
         parser = argparse.ArgsPropagationParser(add_help = False)
         parser.title = 'Cflow Data Collection'
 
-        # cflowcollector_dest
+        # cflow_dest
         # -------------------
-        parser.add_argument('--cflowcollector_dest',
+        parser.add_argument('--cflow_dest',
                             action="store",
                             required = True,
                             default=None,
@@ -51,18 +51,18 @@ class Plugin(BasePlugin):
                                    'example: tftp:/10.1.0.111/temp/')
 
 
-        # cflowcollector_verbose
+        # cflow_verbose
         # ----------------------
-        parser.add_argument('--cflowcollector_verbose',
-                            action = 'store',
+        parser.add_argument('--cflow_verbose',
+                            action = 'store_true',
                             default = False,
                             help = 'verbose cflow copy/clear output')
 
 
-        # cflowcollector_init_flag
+        # cflow_init_flag
         # ------------------------
-        parser.add_argument('--cflowcollector_init_flag',
-                            action = 'store',
+        parser.add_argument('--cflow_init_flag',
+                            action = 'store_true',
                             default = False,
                             help = 'True if process is in the inital status'
                                    ' which needs clear the devices left cflow data')
@@ -87,54 +87,53 @@ class Plugin(BasePlugin):
         # avoid parsing unknowns
         self.args, _ = self.parser.parse_known_args(argv)
 
-    def execution(self, device, **kwargs):
-
-        # Init
-        status = OK
-
         # check cflow dest values
-        parsed = urlparse(self.args.cflowcollector_dest)
+        parsed = urlparse(self.args.cflow_dest)
 
         try:
             assert parsed.scheme == 'tftp'
         except AssertionError as e:
             log.error(banner(str(e)))
-            status += ERRORED(str(e))
-            return status
+            return ERRORED(str(e))
 
         try:
             assert parsed.path != ''
         except AssertionError as e:
             log.error(banner(str(e)))
-            status += ERRORED(str(e))
-            return status
+            return ERRORED(str(e))
 
         try:
-            assert self.args.cflowcollector_dest.endswith('/')
+            assert self.args.cflow_dest.endswith('/')
         except AssertionError as e:
             log.error(banner(str(e)))
-            status += ERRORED(str(e))
-            return status
-        
+            return ERRORED(str(e))
+
         # get server address
-        server = parsed.netloc
+        self.server = parsed.netloc
+        # get path
+        self.path = parsed.path
+
+    def execution(self, device, **kwargs):
+
+        # Init
+        status = OK
 
         # get tftp server from testbed yaml
         tb = device.testbed
 
         # cflow package currently only supports tftp
-        tftp = tb.servers.get('tftp', {}).get('address', {})
+        tftp = tb.servers.get('tftp', {}).get('address', None)
 
         # if provided server is not same as tb yaml, use yaml one
-        if tftp and tftp not in server:
+        if tftp and tftp not in self.server:
             logger.info('Provided tftp is %s, not same as the one in testbed yaml. '
-                        'Will use testbed yaml server %s' % (server, tftp))
-            server = tftp
+                        'Will use testbed yaml server %s' % (self.server, tftp))
+            self.server = tftp
 
         # create cflow object for clear and collect
-        collector = CflowCollector(devices=[device], verbose=self.args.cflowcollector_verbose)
+        collector = CflowCollector(devices=[device], verbose=self.args.cflow_verbose)
 
-        if self.args.cflowcollector_init_flag:
+        if self.args.cflow_init_flag:
             logger.info('clear process on device %s at the beginning' % device.name)
             collector.clear()
 
@@ -146,9 +145,9 @@ class Plugin(BasePlugin):
             status += WARNING('Cannot collect data from device %s \n %s' % (device.name, str(e)))
             return status
 
-        logger.info('export data to %s on device %s' % (self.args.cflowcollector_dest,device.name))
+        logger.info('export data to %s on device %s' % (self.args.cflow_dest,device.name))
         try:        
-            ret = collector.export(dest=self.args.cflowcollector_dest, server=parsed.netloc)
+            ret = collector.export(dest=self.args.cflow_dest, server=self.server)
             assert ret
         except AssertionError as e:
             status += WARNING('There is no files are successfully exported from device %s' % device.name)
@@ -158,7 +157,7 @@ class Plugin(BasePlugin):
             return status
 
         # update status
-        files = [os.path.join(parsed.path, f) for f in ret[0]]
+        files = [os.path.join(self.path, f) for f in ret[0]]
 
         message = 'device %s cflow data exported to %s' % (device.name, files)
         status += OK(message)

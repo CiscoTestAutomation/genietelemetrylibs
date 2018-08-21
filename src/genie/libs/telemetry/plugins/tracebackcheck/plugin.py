@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 class Plugin(BasePlugin):
 
     __plugin_name__ = 'Traceback Check Plugin'
+    __version__ = '1.0.0'
+    __supported_os__ = ['nxos', 'iosxr', 'iosxe']
 
     @classproperty
     def parser(cls):

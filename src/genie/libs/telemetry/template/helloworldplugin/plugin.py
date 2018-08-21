@@ -28,9 +28,13 @@ class Plugin(BasePlugin):
     '''
 
     # Each plugin may have a unique name
-    # Set the plugin name by setting the 'name' class variable.
-    # (defaults to the current class name)
     __plugin_name__ = 'HelloWorld'
+
+    # Each plugin release may have a version
+    __version__ = '1.0.0'
+
+    # Each plugin may have list of supported os
+    __supported_os__ = ['nxos', 'iosxr', 'iosxe']
 
     @classproperty
     def parser(cls):

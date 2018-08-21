@@ -28,12 +28,18 @@ class Plugin(BasePlugin):
     '''
 
     # Each plugin may have a unique name
+    # Set the plugin name by setting the 'name' class variable.
+    # (defaults to the current class name)
     __plugin_name__ = 'HelloWorld'
 
     # Each plugin release may have a version
+    # Set the plugin version by setting the 'version' class variable.
+    # (defaults to 1.0.0)
     __version__ = '1.0.0'
 
     # Each plugin may have list of supported os
+    # Set the plugin supported os by setting the 'token' class variable.
+    # (defaults to [])
     __supported_os__ = ['nxos', 'iosxr', 'iosxe']
 
     @classproperty

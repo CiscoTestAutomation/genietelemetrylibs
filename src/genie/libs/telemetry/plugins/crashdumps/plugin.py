@@ -24,6 +24,8 @@ from genie.abstract import Lookup
 class Plugin(BasePlugin):
 
     __plugin_name__ = 'Crash Dumps Plugin'
+    __version__ = '1.0.0'
+    __supported_os__ = ['nxos', 'iosxr', 'iosxe']
 
     @classproperty
     def parser(cls):

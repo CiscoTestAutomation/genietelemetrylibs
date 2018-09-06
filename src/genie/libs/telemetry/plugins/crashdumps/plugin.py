@@ -176,8 +176,15 @@ class Plugin(BasePlugin):
 
                         break
 
-            status += lookup.libs.utils.upload_to_server(device,
-                self.core_list, self.crashreport_list, **kwargs)
+            # If 'protocol' wasn't found in the arguments and testbed yaml
+            # we should terminate the copy to server part
+            if kwargs['protocol']:
+                status += lookup.libs.utils.upload_to_server(device,
+                    self.core_list, self.crashreport_list, **kwargs)
+            else:
+                raise Exception("Unable to upload to server, file transfer "
+                    "'protocol' is missing. Check the yaml file and the "
+                    "provided arguments.")
 
         # User requested clean up of cores
         if self.args.crashdumps_clean_up and status == CRITICAL:

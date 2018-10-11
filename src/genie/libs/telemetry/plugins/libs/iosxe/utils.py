@@ -23,17 +23,19 @@ from unicon.eal.utils import expect_log
 logger = logging.getLogger(__name__)
 
 
-def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
+def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
 
     # Init
     status = OK
 
     # Construct the core pattern to be parsed later
     # 1613827  -rw-         56487348  Oct 17 2017 15:56:59 +17:00  PE1_RP_0_x86_64_crb_linux_iosd-universalk9-ms_15866_20171016-155604-PDT.core.gz
+    # 7763     -rw-        107847329   Jul 5 2018 12:53:55 +00:00  kernel.rp_RP-EDISON_0_20180705125020.core.flat.gz
+    # 7761     -rw-            36003   Jul 5 2018 12:50:20 +00:00  kernel.rp_RP-EDISON_0_20180705125020.txt
     core_pattern = re.compile(r'(?P<number>\d+) '
         '+(?P<permissions>[rw\-]+) +(?P<filesize>\d+) '
         '+(?P<month>\w+) +(?P<date>\d+) +(?P<year>\d+) '
-        '+(?P<time>[\w\:]+) +(?P<timezone>(\S+)) +(?P<core>(.*core\.gz))$', re.IGNORECASE)
+        '+(?P<time>[\w\:]+) +(?P<timezone>(\S+)) +(?P<core>((.*\.core\.gz)|(.*\.core\.flat\.gz)|(.*\.txt)))$', re.IGNORECASE)
 
     # Construct the crashreport pattern to be parsed later
     # 62  -rw-           125746  Jul 30 2016 05:47:28 +00:00  crashinfo_RP_00_00_20160730-054724-UTC
@@ -47,8 +49,9 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=[]):
     locations = ['flash:/core', 'bootflash:/core', 'harddisk:/core', 'crashinfo:']
 
     # if provided 
-    for crash_string in crash_type:
-        locations.append('flash:{}*'.format(crash_string))
+    if crash_type:
+        for crash_string in crash_type.split(','):
+            locations.append('flash:{}*'.format(crash_string.strip())) if crash_string else None
 
     # Execute command to check for cores and crashinfo reports
     for location in locations:
@@ -146,9 +149,12 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
     password = kwargs['password']
 
     # Check values are not None
-    for item in [protocol, server, destination, username, password]:
-        if item is None:
-            meta_info = "Unable to upload core dump - parameters not provided"
+    for item in kwargs:
+        if item in ['protocol', 'server', 'destination', 'username', 'password'] and \
+           kwargs[item] is None:
+            meta_info = "Unable to upload core dump - parameters `{}` not provided."\
+                        " Required parameters are: `protocol`, `server`, "\
+                        "`destination`, `username`, `password`".format(item)
             return ERRORED(meta_info)
 
     # preparing the full list to iterate over

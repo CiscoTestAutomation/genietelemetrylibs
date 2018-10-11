@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 class Plugin(BasePlugin):
 
     __plugin_name__ = 'Traceback Check Plugin'
+    __version__ = '1.0.0'
+    __supported_os__ = ['nxos', 'iosxr', 'iosxe']
 
     @classproperty
     def parser(cls):
@@ -92,7 +94,10 @@ class Plugin(BasePlugin):
         output = lookup.libs.utils.check_tracebacks(device,
             timeout=self.args.tracebackcheck_timeout)
         if not output:
-            return ERRORED('No output from {cmd}'.format(cmd=self.show_cmd))
+            message = "No output from '{cmd}'".format(cmd=self.show_cmd)
+            status += OK(message)
+            logger.info(banner(message))
+            return status
 
         # Logic pattern
         match_patterns = logic_str(self.args.tracebackcheck_logic_pattern)

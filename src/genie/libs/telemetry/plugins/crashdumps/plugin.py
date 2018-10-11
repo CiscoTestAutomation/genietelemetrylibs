@@ -24,6 +24,8 @@ from genie.abstract import Lookup
 class Plugin(BasePlugin):
 
     __plugin_name__ = 'Crash Dumps Plugin'
+    __version__ = '1.0.0'
+    __supported_os__ = ['nxos', 'iosxr', 'iosxe']
 
     @classproperty
     def parser(cls):
@@ -35,33 +37,36 @@ class Plugin(BasePlugin):
         parser.add_argument('--crashdumps_upload',
                             action="store",
                             default=False,
-                            help='Specify whether upload core dumps')
+                            help='Specify whether to upload core files to a '
+                                 'remote server')
         # clean_up
         # --------
         parser.add_argument('--crashdumps_clean_up',
                             action="store",
                             default=True,
-                            help='Specify whether clear core after upload')
+                            help='Specify whether to clear cores files from '
+                                 'the device')
         # protocol
         # --------
         parser.add_argument('--crashdumps_protocol',
                             action="store",
                             default=None,
-                            help = 'Specify upload protocol\ndefault to TFTP')
+                            help = 'Specify upload protocol\ndefault uses '
+                                   'server protocol from testbed YAML file')
         # server
         # ------
         parser.add_argument('--crashdumps_server',
                             action="store",
                             default=None,
-                            help = 'Specify upload Server\ndefault uses '
-                                   'servers information from yaml file')
+                            help = 'Specify upload server\ndefault uses server '
+                                   'information from the testbed YAML file')
         # port
         # ----
         parser.add_argument('--crashdumps_port',
                             action="store",
                             default=None,
-                            help = 'Specify upload Port\ndefault uses '
-                                   'servers information from yaml file')
+                            help = 'Specify upload port\ndefault uses server '
+                                   'information from testbed YAML file')
         # username
         # --------
         parser.add_argument('--crashdumps_username',
@@ -78,16 +83,17 @@ class Plugin(BasePlugin):
         # -----------
         parser.add_argument('--crashdumps_destination',
                             action="store",
-                            default="/",
-                            help = "Specify destination folder at remote "
-                                   "server\ndefault to '/'")
+                            default=None,
+                            help = 'Specify destination folder on remote server'
+                                   ' to copy core files\ndefault uses server '
+                                   'path information from testbed YAML file')
         # timeout
         # -------
         parser.add_argument('--crashdumps_timeout',
                             action="store",
                             default=300,
-                            help = "Specify upload timeout value\ndefault "
-                                   "to 300 seconds")
+                            help = 'Specify upload timeout value\ndefault to '
+                                   '300 seconds')
         # flash_crash_file
         # ----------------
         parser.add_argument('--crashdumps_flash_crash_file',
@@ -125,9 +131,7 @@ class Plugin(BasePlugin):
         self.core_list = []
         self.crashreport_list = []
 
-        crash_type = getattr(self.args, 'crashdumps_flash_crash_file', [])
-        if crash_type is None:
-            crash_type = []
+        crash_type = getattr(self.args, 'crashdumps_flash_crash_file', None)
 
         # Execute command to check for cores
         status += lookup.libs.utils.check_cores(device, self.core_list,
@@ -172,8 +176,15 @@ class Plugin(BasePlugin):
 
                         break
 
-            status += lookup.libs.utils.upload_to_server(device,
-                self.core_list, self.crashreport_list, **kwargs)
+            # If 'protocol' wasn't found in the arguments and testbed yaml
+            # we should terminate the copy to server part
+            if kwargs['protocol']:
+                status += lookup.libs.utils.upload_to_server(device,
+                    self.core_list, self.crashreport_list, **kwargs)
+            else:
+                raise Exception("Unable to upload to server, file transfer "
+                    "'protocol' is missing. Check the yaml file and the "
+                    "provided arguments.")
 
         # User requested clean up of cores
         if self.args.crashdumps_clean_up and status == CRITICAL:

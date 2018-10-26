@@ -55,7 +55,6 @@ endif
 
 ifeq ($(MAKECMDGOALS), devnet)
 	DEVNET = true
-	CYTHONIZE = true
 	INCLUDE_TESTS = false
 endif
 
@@ -69,7 +68,7 @@ ifeq ($(DEVNET), true)
 endif
 
 # add upload flag ONLY if it's a devnet build and asked for upload
-ifeq ($(DEVNET)$(CYTHONIZE)$(UPLOADPYPI), truetruetrue)
+ifeq ($(DEVNET)$(UPLOADPYPI), truetrue)
 	BUILD_CMD += upload -r $(PYPIREPO)
 endif
 

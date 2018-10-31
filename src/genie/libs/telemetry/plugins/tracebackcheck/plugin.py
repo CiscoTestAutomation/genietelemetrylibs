@@ -11,7 +11,6 @@ import copy
 from ats.utils import parser as argparse
 
 # ATS
-from ats.log.utils import banner
 from ats.datastructures.logic import logic_str
 from ats.datastructures import classproperty
 
@@ -96,7 +95,7 @@ class Plugin(BasePlugin):
         if not output:
             message = "No output from '{cmd}'".format(cmd=self.show_cmd)
             status += OK(message)
-            logger.info(banner(message))
+            logger.info(message)
             return status
 
         # Logic pattern
@@ -110,13 +109,13 @@ class Plugin(BasePlugin):
                 message = "Matched pattern in line: '{line}'".format(line=line)
                 status += CRITICAL(message)
                 status += CRITICAL(matched_lines_dict)
-                logger.error(banner(message))
+                logger.error(message)
 
         # Log message to user
         if not matched_lines_dict['matched_lines']:
             message = "***** No patterns matched *****"
             status += OK(message)
-            logger.info(banner(message))
+            logger.info(message)
 
         # Clear logging (if user specified)
         if self.args.tracebackcheck_clean_up:
@@ -125,7 +124,7 @@ class Plugin(BasePlugin):
                     timeout=self.args.tracebackcheck_timeout)
                 message = "Successfully cleared logging"
                 status += OK(message)
-                logger.info(banner(message))
+                logger.info(message)
             except Exception as e:
                 # Handle exception
                 logger.warning(e)

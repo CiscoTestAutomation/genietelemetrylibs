@@ -71,11 +71,11 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
         
         if 'Invalid input detected' in output or \
            'No such file' in output :
-            logger.warning(banner("Location '{}' does not exist on device".format(location)))
+            logger.warning("Location '{}' does not exist on device".format(location))
             continue
         elif not output:
             meta_info = "Unable to check for cores"
-            logger.error(banner(meta_info))
+            logger.error(meta_info)
             return ERRORED(meta_info)
 
         for line in output.splitlines():
@@ -85,7 +85,7 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
             if m:
                 core = m.groupdict()['core']
                 meta_info = "Core dump generated:\n'{}'".format(core)
-                logger.error(banner(meta_info))
+                logger.error(meta_info)
                 status += CRITICAL(meta_info)
                 core_info = dict(location = location,
                                  core = core)
@@ -97,7 +97,7 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
                 crashreport = m.groupdict()['core']
                 meta_info = "Crashinfo report generated:\n'{}'".\
                     format(crashreport)
-                logger.error(banner(meta_info))
+                logger.error(meta_info)
                 status += CRITICAL(meta_info)
                 crashreport_info = dict(location = location,
                     core = crashreport)
@@ -112,7 +112,7 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
                     crashreport = line
                     meta_info = "Crashinfo report generated:\n'{}' on device {}".\
                         format(line, device.name)
-                    logger.error(banner(meta_info))
+                    logger.error(meta_info)
                     status += CRITICAL(meta_info)
                     crashreport_info = dict(location = location,
                         core = crashreport)
@@ -122,13 +122,13 @@ def check_cores(device, core_list, crashreport_list, timeout, crash_type=None):
         if not core_list:
             meta_info = "No cores found at location: {}".format(
                 location)
-            logger.info(banner(meta_info))
+            logger.info(meta_info)
             status += OK(meta_info)
 
         if not crashreport_list:
             meta_info = "No crashreports found at location: {}".\
                 format(location)
-            logger.info(banner(meta_info))
+            logger.info(meta_info)
             status += OK(meta_info)
 
     return status
@@ -194,7 +194,7 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
             if 'Tftp operation failed' in e:
                 meta_info = "{} upload operation failed: {}".format(file_type,
                     message)
-                logger.error(banner(meta_info))
+                logger.error(meta_info)
                 status += ERRORED(meta_info)
             else:
                 # Handle exception
@@ -202,7 +202,7 @@ def upload_to_server(device, core_list, crashreport_list, **kwargs):
                 status += ERRORED("Failed: {}".format(message))
 
         meta_info = "{} upload operation passed: {}".format(file_type, message)
-        logger.info(banner(meta_info))
+        logger.info(meta_info)
         status += OK(meta_info)
 
     return status
@@ -231,14 +231,14 @@ def clear_cores(device, core_list, crashreport_list):
             # Log to user
             meta_info = 'Successfully deleted {location}/{core}'.format(
                 core=item['core'],location=item['location'])
-            logger.info(banner(meta_info))
+            logger.info(meta_info)
             return OK(meta_info)
         except Exception as e:
             # Handle exception
             logger.warning(e)
             meta_info = 'Unable to delete {location}/{core}'.format(
                 core=item['core'],location=item['location'])
-            logger.error(banner(meta_info))
+            logger.error(meta_info)
             return ERRORED(meta_info)
 
 def check_tracebacks(device, timeout, **kwargs):

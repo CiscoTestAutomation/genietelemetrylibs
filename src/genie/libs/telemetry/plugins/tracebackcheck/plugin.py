@@ -93,7 +93,8 @@ class Plugin(BasePlugin):
         output = lookup.libs.utils.check_tracebacks(device,
             timeout=self.args.tracebackcheck_timeout)
         if not output:
-            message = "No output from '{cmd}'".format(cmd=self.show_cmd)
+            message = "No irregular patterns found in '{cmd}'".format(
+                cmd=self.show_cmd)
             status += OK(message)
             logger.info(message)
             return status

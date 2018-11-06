@@ -20,7 +20,7 @@
 #   November 2018
 #
 # About This File:
-#   This script will build the genie.libs.parser package for
+#   This script will build the genie.libs.telemetry package for
 #   distribution in PyPI server
 #
 # Requirements:

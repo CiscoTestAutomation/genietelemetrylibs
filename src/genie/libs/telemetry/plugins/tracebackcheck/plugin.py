@@ -115,7 +115,7 @@ class Plugin(BasePlugin):
 
         # Log message to user
         if not matched_lines_dict['matched_lines']:
-            message = "***** No patterns {patterns} matched *****".format(
+            message = "No patterns {patterns} matched".format(
                 patterns= self.args.tracebackcheck_logic_pattern)
             status += OK(message)
             logger.info(message)
@@ -126,14 +126,14 @@ class Plugin(BasePlugin):
                 output = lookup.libs.utils.clear_tracebacks(device,
                     timeout=self.args.tracebackcheck_timeout)
                 message = "Successfully cleared logging"
-                status += OK(message)
+                status += OK()
                 logger.info(message)
             except Exception as e:
                 # Handle exception
                 logger.warning(e)
                 message = "Clear logging execution failed"
                 logger.error(message)
-                status += ERRORED(message)
+                status += ERRORED()
 
         # Final status
         return status

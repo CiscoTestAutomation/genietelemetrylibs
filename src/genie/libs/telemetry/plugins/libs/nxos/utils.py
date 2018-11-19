@@ -4,9 +4,6 @@ import time
 import logging
 from datetime import datetime
 
-# ATS
-from ats.log.utils import banner
-
 # GenieMonitor
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
@@ -40,7 +37,7 @@ def check_cores(device, core_list, **kwargs):
 
     if not output.entries:
         meta_info = "No cores found!"
-        logger.info(banner(meta_info))
+        logger.info(meta_info)
         return OK(meta_info)
     
     # Parse through output to collect core information (if any)
@@ -61,7 +58,7 @@ def check_cores(device, core_list, **kwargs):
 
         meta_info = "Core dump generated for process '{}' at {}".\
             format(row['Process\\-name'], date_)
-        logger.error(banner(meta_info))
+        logger.error(meta_info)
         status += CRITICAL(meta_info)
 
     return status
@@ -133,7 +130,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
             if 'Tftp operation failed' in e:
                 meta_info = "Core dump upload operation failed: {}".format(
                     message)
-                logger.error(banner(meta_info))
+                logger.error(meta_info)
                 status += ERRORED(meta_info)
             else:
                 # Handle exception
@@ -141,7 +138,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
                 status += ERRORED("Failed: {}".format(message))
 
         meta_info = "Core dump upload operation passed: {}".format(message)
-        logger.info(banner(meta_info))
+        logger.info(meta_info)
         status += OK(meta_info)
 
     return status
@@ -153,7 +150,7 @@ def clear_cores(device, core_list, crashreport_list, **kwargs):
     try:
         device.execute('clear cores')
         meta_info = "Successfully cleared cores on device"
-        logger.info(banner(meta_info))
+        logger.info(meta_info)
         status = OK(meta_info)
     except Exception as e:
         # Handle exception

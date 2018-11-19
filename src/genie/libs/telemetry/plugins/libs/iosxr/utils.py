@@ -3,9 +3,6 @@
 import re
 import logging
 
-# ATS
-from ats.log.utils import banner
-
 # GenieMonitor
 from genie.telemetry.status import OK, WARNING, ERRORED, PARTIAL, CRITICAL
 
@@ -35,15 +32,15 @@ def check_cores(device, core_list, **kwargs):
         except Exception as e:
             # Handle exception
             logger.warning(e)
-            logger.warning(banner("Location '{}' does not exist on device".format(location)))
+            logger.warning("Location '{}' does not exist on device".format(location))
             continue
         
         if 'Invalid input detected' in output:
-            logger.warning(banner("Location '{}' does not exist on device".format(location)))
+            logger.warning("Location '{}' does not exist on device".format(location))
             continue
         elif not output:
             meta_info = "Unable to check for cores"
-            logger.error(banner(meta_info))
+            logger.error(meta_info)
             return ERRORED(meta_info)
 
         # 24 -rwxr--r-- 1 18225345 Oct 23 05:15 ipv6_rib_9498.by.11.20170624-014425.xr-vm_node0_RP0_CPU0.237a0.core.gz
@@ -58,7 +55,7 @@ def check_cores(device, core_list, **kwargs):
             if match:
                 core = match.groupdict()['core']
                 meta_info = "Core dump generated:\n'{}'".format(core)
-                logger.error(banner(meta_info))
+                logger.error(meta_info)
                 status += CRITICAL(meta_info)
                 core_info = dict(location = location,
                                  core = core)
@@ -66,7 +63,7 @@ def check_cores(device, core_list, **kwargs):
 
         if not core_list:
             meta_info = "No cores found at location: {}".format(location)
-            logger.info(banner(meta_info))
+            logger.info(meta_info)
             status += OK(meta_info)
 
     return status
@@ -122,7 +119,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
             if 'Tftp operation failed' in e:
                 meta_info = "Core dump upload operation failed: {}".format(
                     message)
-                logger.error(banner(meta_info))
+                logger.error(meta_info)
                 status += ERRORED(meta_info)
             else:
                 # Handle exception
@@ -130,7 +127,7 @@ def upload_to_server(device, core_list, *args, **kwargs):
                 status += ERRORED("Failed: {}".format(message))
 
         meta_info = "Core dump upload operation passed: {}".format(message)
-        logger.info(banner(meta_info))
+        logger.info(meta_info)
         status += OK(meta_info)
 
     return status
@@ -159,14 +156,14 @@ def clear_cores(device, core_list, crashreport_list, **kwargs):
             # Log to user
             meta_info = 'Successfully deleted {location}/{core}'.format(
                         core=item['core'],location=item['location'])
-            logger.info(banner(meta_info))
+            logger.info(meta_info)
             return OK(meta_info)
         except Exception as e:
             # Handle exception
             logger.warning(e)
             meta_info = 'Unable to delete {location}/{core}'.format(
                         core=item['core'],location=item['location'])
-            logger.error(banner(meta_info))
+            logger.error(meta_info)
             return ERRORED(meta_info)
 
 def check_tracebacks(device, timeout, **kwargs):

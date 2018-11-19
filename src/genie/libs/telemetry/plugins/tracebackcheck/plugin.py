@@ -11,7 +11,6 @@ import copy
 from ats.utils import parser as argparse
 
 # ATS
-from ats.log.utils import banner
 from ats.datastructures.logic import logic_str
 from ats.datastructures import classproperty
 
@@ -94,9 +93,11 @@ class Plugin(BasePlugin):
         output = lookup.libs.utils.check_tracebacks(device,
             timeout=self.args.tracebackcheck_timeout)
         if not output:
-            message = "No output from '{cmd}'".format(cmd=self.show_cmd)
+            message = "No patterns {patterns} found in '{cmd}'".format(
+                patterns= self.args.tracebackcheck_logic_pattern,
+                cmd=self.show_cmd)
             status += OK(message)
-            logger.info(banner(message))
+            logger.info(message)
             return status
 
         # Logic pattern
@@ -110,13 +111,14 @@ class Plugin(BasePlugin):
                 message = "Matched pattern in line: '{line}'".format(line=line)
                 status += CRITICAL(message)
                 status += CRITICAL(matched_lines_dict)
-                logger.error(banner(message))
+                logger.error(message)
 
         # Log message to user
         if not matched_lines_dict['matched_lines']:
-            message = "***** No patterns matched *****"
+            message = "No patterns {patterns} matched".format(
+                patterns= self.args.tracebackcheck_logic_pattern)
             status += OK(message)
-            logger.info(banner(message))
+            logger.info(message)
 
         # Clear logging (if user specified)
         if self.args.tracebackcheck_clean_up:
@@ -124,14 +126,14 @@ class Plugin(BasePlugin):
                 output = lookup.libs.utils.clear_tracebacks(device,
                     timeout=self.args.tracebackcheck_timeout)
                 message = "Successfully cleared logging"
-                status += OK(message)
-                logger.info(banner(message))
+                status += OK()
+                logger.info(message)
             except Exception as e:
                 # Handle exception
                 logger.warning(e)
                 message = "Clear logging execution failed"
                 logger.error(message)
-                status += ERRORED(message)
+                status += ERRORED()
 
         # Final status
         return status

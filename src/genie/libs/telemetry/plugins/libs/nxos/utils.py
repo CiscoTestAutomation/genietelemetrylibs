@@ -28,11 +28,23 @@ def check_cores(device, core_list, **kwargs):
     # Init
     status = OK
 
+    # Check if device is VDC
+    try:
+        output = device.parse('show vdc current-vdc')
+    except Exception as e:
+        logger.error("Unale to check if device is VDC")
+
+    # Check if device is VDC
+    if 'current_vdc' in output and output['current_vdc']['id'] != '1':
+        cmd = 'show cores'
+    else:
+        cmd = 'show cores vdc-all'
+
     # Execute command to check for cores
     header = [ "VDC", "Module", "Instance",
                 "Process\-name", "PID", "Date\(Year\-Month\-Day Time\)" ]
     output = oper_fill_tabular(device = device, 
-                               show_command = 'show cores vdc-all',
+                               show_command = cmd,
                                header_fields = header, index = [5])
 
     if not output.entries:

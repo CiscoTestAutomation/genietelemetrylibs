@@ -32,7 +32,11 @@ def check_cores(device, core_list, **kwargs):
     try:
         output = device.parse('show vdc current-vdc')
     except Exception as e:
-        logger.error("Unable to check if device is VDC")
+        logger.warning(e)
+        meta_info = "Unable to execute 'show vdc current-vdc' to check if device is VDC"
+        logger.error(meta_info)
+        status = ERRORED(meta_info)
+        return status
 
     # Check if device is VDC
     if 'current_vdc' in output and output['current_vdc']['id'] != '1':

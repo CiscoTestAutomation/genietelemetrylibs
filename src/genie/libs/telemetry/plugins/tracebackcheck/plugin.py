@@ -37,13 +37,14 @@ class Plugin(BasePlugin):
         parser = argparse.ArgsPropagationParser(add_help = False)
         parser.title = 'Traceback Check'
 
-        # tracebackcheck_keywords
-        # -----------------------
-        parser.add_argument('--tracebackcheck_keywords',
+        # tracebackcheck_logic_pattern
+        # ----------------------------
+        parser.add_argument('--tracebackcheck_logic_pattern',
                             action="store",
-                            help="Specify comma-separated string of keywords to"
-                                 " search within the 'show logging' output.\n"
-                                 "Default: 'Traceback'")
+                            help="Specify pyATS logic pattern or comma-"
+                                 "separated string of keywords to search "
+                                 "within the 'show logging' output."
+                                 "\nDefault: And('Traceback')")
 
         # tracebackcheck_disable_traceback
         # --------------------------------
@@ -94,37 +95,46 @@ class Plugin(BasePlugin):
         # Init
         status = OK
         matched_lines_dict = {}
+        match_patterns = None
 
         lookup = Lookup.from_device(device)
-
-        # Default pattern to search for
-        logic_string = "\'Traceback\'"
 
         # Execute command to check for tracebacks - timeout set to 5 mins
         output = lookup.libs.utils.check_tracebacks(device,
             timeout=self.args.tracebackcheck_timeout)
         if not output:
-            message = "No patterns {patterns} found in '{cmd}'".format(
-                patterns= self.args.tracebackcheck_logic_pattern,
-                cmd=self.show_cmd)
+            message = "No output found for '{cmd}'".format(cmd=self.show_cmd)
             status += OK(message)
             logger.info(message)
             return status
 
-        # Add in user provided keywords
-        if self.args.tracebackcheck_keywords:
-            for item in self.args.tracebackcheck_keywords.split(', '):
-                logic_string += ", \'{}\'".format(item.strip())
-
-        # Remove keyword 'Traceback' if user requested
-        if self.args.tracebackcheck_disable_traceback:
-            logic_string.replace("\'Traceback\', ", "")
-
-        # Create final logic pattern to match in 'show logging logfile' output
-        match_patterns = logic_str("Or({})".format(logic_string.strip()))
+        # Set match pattern to search 'show logging logfile'
+        if not self.args.tracebackcheck_logic_pattern:
+            match_patterns = logic_str("And('Traceback')")
+        else:
+            # Check if its a pattern or a string
+            if 'And' in self.args.tracebackcheck_logic_pattern or\
+               'Not' in self.args.tracebackcheck_logic_pattern or\
+               'Or' in self.args.tracebackcheck_logic_pattern:
+                if not self.args.tracebackcheck_disable_traceback:
+                    match_patterns = logic_str("Or('Traceback', {})".\
+                                format(self.args.tracebackcheck_logic_pattern))
+                else:
+                    match_patterns = logic_str(self.args.tracebackcheck_logic_pattern)
+            else:
+                # Check if user wants to disable 'Traceback' check
+                if not self.args.tracebackcheck_disable_traceback:
+                    logic_string = "\'Traceback\', "
+                # Add patterns to create a logic string
+                for item in self.args.tracebackcheck_logic_pattern.split(', '):
+                    logic_string += "\'{}\', ".format(item.strip())
+                # Create logic pattern to match in 'show logging logfile' output
+                match_patterns = logic_str("Or({})".\
+                                            format(logic_string.rstrip(", ")))
 
         # Parse 'show logging logfile' output for keywords
         matched_lines_dict['matched_lines'] = []
+        logger.info('Patterns to search for: {}'.format(match_patterns))
         for line in output.splitlines():
             if match_patterns(line):
                 matched_lines_dict['matched_lines'].append(line)
@@ -135,8 +145,8 @@ class Plugin(BasePlugin):
 
         # Log message to user
         if not matched_lines_dict['matched_lines']:
-            message = "No patterns {patterns} matched".format(
-                patterns= self.args.tracebackcheck_logic_pattern)
+            message = "No patterns {patterns} matched".\
+                            format(patterns=match_patterns)
             status += OK(message)
             logger.info(message)
 

@@ -37,24 +37,32 @@ class Plugin(BasePlugin):
         parser = argparse.ArgsPropagationParser(add_help = False)
         parser.title = 'Traceback Check'
 
-        # logic_pattern
-        # -------------
-        parser.add_argument('--tracebackcheck_logic_pattern',
+        # tracebackcheck_keywords
+        # -----------------------
+        parser.add_argument('--tracebackcheck_keywords',
                             action="store",
-                            default="And('Traceback')",
-                            help='Specify logical expression for patterns to '
-                                 'include/exclude when checking tracebacks '
-                                 'following PyATS logic format. Default pattern'
-                                 'is to check for Tracebacks.')
-        # clean_up
-        # --------
+                            help="Specify comma-separated string of keywords to"
+                                 " search within the 'show logging' output.\n"
+                                 "Default: 'Traceback'")
+
+        # tracebackcheck_disable_traceback
+        # --------------------------------
+        parser.add_argument('--tracebackcheck_disable_traceback',
+                            action="store",
+                            default=False,
+                            help="Disable check for 'Traceback' keyword within "
+                                 "logging output.\nDefault: False")
+
+        # tracebackcheck_clean_up
+        # -----------------------
         parser.add_argument('--tracebackcheck_clean_up',
                             action="store",
                             default=True,
                             help='Specify whether to clear all warnings and '
                                  'tracebacks after reporting error')
-        # timeout
-        # -------
+
+        # tracebackcheck_timeout
+        # ----------------------
         parser.add_argument('--tracebackcheck_timeout',
                             action="store",
                             default=300,
@@ -89,6 +97,9 @@ class Plugin(BasePlugin):
 
         lookup = Lookup.from_device(device)
 
+        # Default pattern to search for
+        logic_string = "\'Traceback\'"
+
         # Execute command to check for tracebacks - timeout set to 5 mins
         output = lookup.libs.utils.check_tracebacks(device,
             timeout=self.args.tracebackcheck_timeout)
@@ -100,8 +111,17 @@ class Plugin(BasePlugin):
             logger.info(message)
             return status
 
-        # Logic pattern
-        match_patterns = logic_str(self.args.tracebackcheck_logic_pattern)
+        # Add in user provided keywords
+        if self.args.tracebackcheck_keywords:
+            for item in self.args.tracebackcheck_keywords.split(', '):
+                logic_string += ", \'{}\'".format(item.strip())
+
+        # Remove keyword 'Traceback' if user requested
+        if self.args.tracebackcheck_disable_traceback:
+            logic_string.replace("\'Traceback\', ", "")
+
+        # Create final logic pattern to match in 'show logging logfile' output
+        match_patterns = logic_str("Or({})".format(logic_string.strip()))
 
         # Parse 'show logging logfile' output for keywords
         matched_lines_dict['matched_lines'] = []

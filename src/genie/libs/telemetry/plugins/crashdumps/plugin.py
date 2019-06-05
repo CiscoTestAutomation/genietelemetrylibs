@@ -152,7 +152,7 @@ class Plugin(BasePlugin):
             # Will make sure that manadtory keys exist for uploading to server
             # [protocol, server, destination, username, password]
             if not kwargs['protocol']:
-                valid_protocols_list = ['tftp', 'ftp', 'scp']
+                valid_protocols_list = ['tftp', 'ftp']
                 if hasattr(device.testbed, 'servers'):
                     for item in device.testbed.servers.keys():
                         if item in valid_protocols_list:

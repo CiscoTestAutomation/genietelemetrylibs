@@ -122,6 +122,7 @@ class Plugin(BasePlugin):
                 else:
                     match_patterns = logic_str(self.args.tracebackcheck_logic_pattern)
             else:
+                logic_string = ""
                 # Check if user wants to disable 'Traceback' check
                 if not self.args.tracebackcheck_disable_traceback:
                     logic_string = "\'Traceback\', "

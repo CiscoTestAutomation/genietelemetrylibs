@@ -149,10 +149,12 @@ class Plugin(BasePlugin):
                       'destination': self.args.crashdumps_destination,
                       'timeout': self.args.crashdumps_timeout}
 
+            # Valid protocols
+            valid_protocols_list = ['tftp', 'ftp']
+
             # Will make sure that manadtory keys exist for uploading to server
             # [protocol, server, destination, username, password]
             if not kwargs['protocol']:
-                valid_protocols_list = ['tftp', 'ftp']
                 if hasattr(device.testbed, 'servers'):
                     for item in device.testbed.servers.keys():
                         if item in valid_protocols_list:
@@ -178,13 +180,15 @@ class Plugin(BasePlugin):
 
             # If 'protocol' wasn't found in the arguments and testbed yaml
             # we should terminate the copy to server part
-            if kwargs['protocol']:
+            if kwargs['protocol'] and kwargs['protocol'] in valid_protocols_list:
                 status += lookup.libs.utils.upload_to_server(device,
                     self.core_list, self.crashreport_list, **kwargs)
             else:
-                raise Exception("Unable to upload to server, file transfer "
-                    "'protocol' is missing. Check the yaml file and the "
-                    "provided arguments.")
+                raise Exception("Unable to upload to server: file transfer "
+                                "'protocol' is missing or invalid. "
+                                "Supported protocols are 'ftp' and 'tftp'. "
+                                "Check the testbed/genietelemetry yaml file "
+                                "and the provided arguments.")
 
         # User requested clean up of cores
         if self.args.crashdumps_clean_up and status == CRITICAL:

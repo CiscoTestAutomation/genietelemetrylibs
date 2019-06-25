@@ -28,11 +28,27 @@ def check_cores(device, core_list, **kwargs):
     # Init
     status = OK
 
+    # Check if device is VDC
+    try:
+        output = device.parse('show vdc current-vdc')
+    except Exception as e:
+        logger.warning(e)
+        meta_info = "Unable to execute 'show vdc current-vdc' to check if device is VDC"
+        logger.error(meta_info)
+        status = ERRORED(meta_info)
+        return status
+
+    # Check if device is VDC
+    if 'current_vdc' in output and output['current_vdc']['id'] != '1':
+        cmd = 'show cores'
+    else:
+        cmd = 'show cores vdc-all'
+
     # Execute command to check for cores
     header = [ "VDC", "Module", "Instance",
                 "Process\-name", "PID", "Date\(Year\-Month\-Day Time\)" ]
     output = oper_fill_tabular(device = device, 
-                               show_command = 'show cores vdc-all',
+                               show_command = cmd,
                                header_fields = header, index = [5])
 
     if not output.entries:
@@ -105,8 +121,8 @@ def upload_to_server(device, core_list, *args, **kwargs):
             pid = '{pid}/{instance}'.format(pid = core['pid'],
                                             instance = core['instance'])
 
-        message = "Core dump upload attempt from {} to {} via server {}".format(
-            core['module'], destination, server)
+        message = "Core dump upload attempt from module {} to {} via server {}".\
+                    format(core['module'], destination, server)
 
         # construction the module/pid for the copy process
         core['core'] = '{module}/{pid}'.format(module = core['module'],
@@ -127,19 +143,19 @@ def upload_to_server(device, core_list, *args, **kwargs):
                                          source=from_URL,
                                          destination=to_URL)
         except Exception as e:
-            if 'Tftp operation failed' in e:
+            if 'Tftp operation failed' in str(e):
                 meta_info = "Core dump upload operation failed: {}".format(
                     message)
                 logger.error(meta_info)
                 status += ERRORED(meta_info)
             else:
                 # Handle exception
-                logger.warning(e)
+                logger.error(e)
                 status += ERRORED("Failed: {}".format(message))
-
-        meta_info = "Core dump upload operation passed: {}".format(message)
-        logger.info(meta_info)
-        status += OK(meta_info)
+        else:
+            meta_info = "Core dump upload operation passed: {}".format(message)
+            logger.info(meta_info)
+            status += OK(meta_info)
 
     return status
 

@@ -12,31 +12,6 @@ import sys
 
 from setuptools import setup, find_packages
 
-_INTERNAL_SUPPORT = 'pyats-support@cisco.com'
-_EXTERNAL_SUPPORT = 'pyats-support-ext@cisco.com'
-
-_INTERNAL_LICENSE = 'Cisco Systems, Inc. Cisco Confidential',
-_EXTERNAL_LICENSE = 'Apache 2.0'
-
-_INTERNAL_URL = 'http://wwwin-pyats.cisco.com/cisco-shared/genietelemetry/latest/'
-_EXTERNAL_URL = 'https://developer.cisco.com/site/pyats/'
-
-DEVNET_CMDLINE_OPT = '--devnet'
-devnet = False
-if DEVNET_CMDLINE_OPT in sys.argv:
-    # avoiding argparse complexity :o
-    sys.argv.remove(DEVNET_CMDLINE_OPT)
-    devnet = True
-
-# pyats support mailer
-SUPPORT = _EXTERNAL_SUPPORT if devnet else _INTERNAL_SUPPORT
-
-# license statement
-LICENSE = _EXTERNAL_LICENSE if devnet else _INTERNAL_LICENSE
-
-# project url
-URL = _EXTERNAL_URL if devnet else _INTERNAL_URL
-
 def read(*paths):
     '''read and return txt content of file'''
     with open(os.path.join(*paths)) as fp:
@@ -82,15 +57,15 @@ setup(
     description = 'Genie libs Telemetry: Genie Telemetry Libraries',
     long_description = read('DESCRIPTION.rst'),
 
-    # the project's main homepage.
-    url = URL,
+     # the project's main homepage.
+    url = 'https://developer.cisco.com/pyats',
 
     # author details
     author = 'Cisco Systems Inc.',
-    author_email = SUPPORT,
+    author_email = 'pyats-support-ext@cisco.com',
 
     # project licensing
-    license = LICENSE,
+    license = 'Apache 2.0',
 
     # see https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers = [

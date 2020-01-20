@@ -1,7 +1,7 @@
 # [DEPRECATION NOTICE]
 
 As of release v20.1, this repository is effectively deprecated.
-The contents are moved into https://github.com/CiscoTestAutomation/genielibs instead.
+The contents are moved into the `genie.telemetry` package instead.
 
 ----------------------------------------------------------------------------
 # Genie Telemetry Library
